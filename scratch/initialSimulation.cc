@@ -113,8 +113,10 @@ int main (int argc, char *argv[])
   // Create EDs
   /////////////
 
+  const uint32_t NO_OF_END_DEVICES = 6;
+
   NodeContainer endDevices;
-  endDevices.Create (6);
+  endDevices.Create (NO_OF_END_DEVICES);
   mobilityEd.Install (endDevices);
 
   // Create a LoraDeviceAddressGenerator
@@ -130,10 +132,19 @@ int main (int argc, char *argv[])
   helper.Install (phyHelper, macHelper, endDevices);
 
   // Set message type (Default is unconfirmed)
-  Ptr<LoraMac> edMac1 = endDevices.Get (1)->GetDevice (0)->GetObject<LoraNetDevice> ()->GetMac ();
-  Ptr<EndDeviceLoraMac> edLoraMac1 = edMac1->GetObject<EndDeviceLoraMac> ();
-  edLoraMac1->SetMType (LoraMacHeader::CONFIRMED_DATA_UP);
+  //Ptr<LoraMac> edMac1 = endDevices.Get (1)->GetDevice (0)->GetObject<LoraNetDevice> ()->GetMac ();
+  //Ptr<EndDeviceLoraMac> edLoraMac1 = edMac1->GetObject<EndDeviceLoraMac> ();
+  //edLoraMac1->SetMType (LoraMacHeader::CONFIRMED_DATA_UP);
 
+  // Set message type to CONFIRMED_DATA_UP for all end devices
+  for(uint32_t i = 0; i < NO_OF_END_DEVICES; i++) {
+
+      Ptr<LoraMac> edMacTemp = endDevices.Get (i)->GetDevice (0)->GetObject<LoraNetDevice> ()->GetMac ();
+      Ptr<EndDeviceLoraMac> edLoraMacTemp = edMacTemp->GetObject<EndDeviceLoraMac> ();
+      edLoraMacTemp->SetMType (LoraMacHeader::CONFIRMED_DATA_UP);
+      NS_LOG_UNCOND(i);
+
+  }
 
   // Install applications in EDs
   OneShotSenderHelper oneShotHelper = OneShotSenderHelper ();
