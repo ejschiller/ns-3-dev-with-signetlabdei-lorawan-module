@@ -1,7 +1,11 @@
 /*
  * This example creates a simple network in which all LoRaWAN components are
  * simulated: End Devices, some Gateways and a Network Server.
- * Two end devices are already configured to send unconfirmed and confirmed messages respectively.
+ *
+ * The simulation uses the geographical of 6 real existing, frequently trans-
+ * mitting TTN LoRaWAN end devices (as well as gateways) from the Zurich area.
+ * By increasing the NO_OF_END_DEVICES, end devices are added, whose positions
+ * base on the real nodes and are modified by a random offset (+/- 1000 m).
  */
 
 #include "ns3/point-to-point-module.h"
@@ -40,9 +44,9 @@ int main (int argc, char *argv[])
   // Logging
   //////////
 
-  //LogComponentEnable ("NetworkServerExample", LOG_LEVEL_ALL);
-  //LogComponentEnable ("SimpleNetworkServer", LOG_LEVEL_ALL);
-  //LogComponentEnable ("GatewayLoraMac", LOG_LEVEL_ALL);
+  LogComponentEnable ("NetworkServerExample", LOG_LEVEL_ALL);
+  LogComponentEnable ("SimpleNetworkServer", LOG_LEVEL_ALL);
+  LogComponentEnable ("GatewayLoraMac", LOG_LEVEL_ALL);
   // LogComponentEnable("LoraFrameHeader", LOG_LEVEL_ALL);
   // LogComponentEnable("LoraMacHeader", LOG_LEVEL_ALL);
   // LogComponentEnable("MacCommand", LOG_LEVEL_ALL);
@@ -51,7 +55,7 @@ int main (int argc, char *argv[])
   // LogComponentEnable("LoraChannel", LOG_LEVEL_ALL);
   // LogComponentEnable("EndDeviceLoraPhy", LOG_LEVEL_ALL);
   // LogComponentEnable("LogicalLoraChannelHelper", LOG_LEVEL_ALL);
-  //LogComponentEnable ("EndDeviceLoraMac", LOG_LEVEL_ALL);
+  LogComponentEnable ("EndDeviceLoraMac", LOG_LEVEL_ALL);
   // LogComponentEnable ("OneShotSender", LOG_LEVEL_ALL);
   // LogComponentEnable("PointToPointNetDevice", LOG_LEVEL_ALL);
   // LogComponentEnable ("Forwarder", LOG_LEVEL_ALL);
@@ -85,12 +89,12 @@ int main (int argc, char *argv[])
   // At least the extracted nodes should be present in the simulation
   NS_ASSERT(NO_OF_END_DEVICES >= 6);
 
-  double min = -500.0;
-  double max = 500.0;
+  double min = -1000.0;
+  double max = 1000.0;
 
-  Ptr<UniformRandomVariable> x = CreateObject<UniformRandomVariable> ();
-  x->SetAttribute ("Min", DoubleValue (min));
-  x->SetAttribute ("Max", DoubleValue (max));
+  Ptr<UniformRandomVariable> rand = CreateObject<UniformRandomVariable> ();
+  rand->SetAttribute ("Min", DoubleValue (min));
+  rand->SetAttribute ("Max", DoubleValue (max));
 
   MobilityHelper mobilityEd, mobilityGw;
   Ptr<ListPositionAllocator> positionAllocEd = CreateObject<ListPositionAllocator> ();
@@ -106,31 +110,23 @@ int main (int argc, char *argv[])
 
   // Add extracted end devices' geographic positions
   for(auto ite = extractedPositions.begin(); ite != extractedPositions.end(); ++ite) {
-
       positionAllocEd->Add (*ite);
-
   }
 
-  // Add additional end devices w/ random geograpic positions in an area around real nodes
+  // Add additional end devices around real nodes with random position offset
   uint32_t count = 6;
   auto ite = extractedPositions.begin();
 
   while(count < NO_OF_END_DEVICES) {
-
       if(ite == extractedPositions.end()) ite = extractedPositions.begin();
 
-      NS_LOG_UNCOND(ite->x);
-      NS_LOG_UNCOND(ite->y);
-      NS_LOG_UNCOND(ite->z);
-
-      // TODO: Build a 'salted' Vector here, add it to positionAllocEd 
+      // Add random offset between min & max to x and y coordinates
+      Vector tempV(ite->x + rand->GetValue(), ite->y + rand->GetValue(), 0.0);
+      positionAllocEd->Add (tempV);
 
       ++ite;
       ++count;
-
   }
-
-
 
   mobilityEd.SetPositionAllocator (positionAllocEd);
   mobilityEd.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
@@ -176,11 +172,9 @@ int main (int argc, char *argv[])
 
   // Set message type to CONFIRMED_DATA_UP (ACK) for all end devices
   for(uint32_t i = 0; i < NO_OF_END_DEVICES; i++) {
-
       Ptr<LoraMac> edMacTemp = endDevices.Get (i)->GetDevice (0)->GetObject<LoraNetDevice> ()->GetMac ();
       Ptr<EndDeviceLoraMac> edLoraMacTemp = edMacTemp->GetObject<EndDeviceLoraMac> ();
       edLoraMacTemp->SetMType (LoraMacHeader::CONFIRMED_DATA_UP);
-
   }
 
   // Install applications in EDs
