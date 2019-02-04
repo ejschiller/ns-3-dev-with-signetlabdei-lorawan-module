@@ -139,6 +139,9 @@ int main (int argc, char *argv[])
   // NO_OF_END_DEVICES should at least be larger than NO_OF_GATEWAYS
   NS_ASSERT(NO_OF_GATEWAYS < NO_OF_END_DEVICES);
 
+  // Only add as much gateways as were present for the Zurich area
+  NS_ASSERT(NO_OF_GATEWAYS <= 58);
+
   // x/y-coordinates according to result of gatewayExtractor.py
   std::vector<Vector> gatewayPositions;
 
