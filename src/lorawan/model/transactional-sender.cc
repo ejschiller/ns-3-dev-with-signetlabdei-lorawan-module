@@ -107,28 +107,59 @@ TransactionalSender::SendPacket (void)
 {
   NS_LOG_FUNCTION (this);
 
-  // Create and send a new packet
   Ptr<Packet> packet;
-  if (m_pktSizeRV)
-    {
-      int randomsize = m_pktSizeRV->GetInteger ();
-      packet = Create<Packet> (m_basePktSize + randomsize);
-    }
-  else
-    {
-      packet = Create<Packet> (m_basePktSize);
-    }
+
+
+  if(packet_count == 0) {
+
+    packet = Create<Packet> (32);   // sending public key, 32 B
+    m_mac->Send (packet);
+    NS_LOG_UNCOND ("Sent a public key packet of size " << packet->GetSize () << "B");
+    ++packet_count;
+    m_sendEvent = Simulator::Schedule (m_interval, &TransactionalSender::SendPacket,
+                                   this);
+
+  } else if (packet_count == 11) {
+
+    packet = Create<Packet> (34);   // sending 1st part of signature, 32 B + 2 B counter
+    m_mac->Send (packet);
+    NS_LOG_UNCOND ("Sent signature packet 1/2 of size " << packet->GetSize () << "B");
+    ++packet_count;
+    m_sendEvent = Simulator::Schedule (m_interval, &TransactionalSender::SendPacket,
+                                     this);
+
+  } else if (packet_count == 12) {
+
+    packet = Create<Packet> (34);   // sending 2nd part of signature, 32 B + 2 B counter
+    m_mac->Send (packet);
+    NS_LOG_UNCOND ("Sent signature packet 2/2 of size " << packet->GetSize () << "B");
+    packet_count = 0;
+    m_sendEvent = Simulator::Schedule (m_interval, &TransactionalSender::SendPacket,
+                                     this);
+
+  } else {
+
+    packet = Create<Packet> (42);   // sending data, 40 B + 2 B counter
+    m_mac->Send (packet);
+    NS_LOG_UNCOND ("Sent a data packet of size " << packet->GetSize () << "B");
+    ++packet_count;
+    m_sendEvent = Simulator::Schedule (m_interval, &TransactionalSender::SendPacket,
+                                       this);
+  }
+
+  /*packet = Create<Packet> (32);
 
   m_mac->Send (packet);
 
-  IncrementPacketCount();
+  ++packet_count;
+
   NS_LOG_UNCOND("packet_count: " << (int)packet_count);
 
   // Schedule the next SendPacket event
   m_sendEvent = Simulator::Schedule (m_interval, &TransactionalSender::SendPacket,
                                      this);
 
-  NS_LOG_DEBUG ("Sent a packet of size " << packet->GetSize ());
+  NS_LOG_DEBUG ("Sent a packet of size " << packet->GetSize ());*/
 }
 
 void
