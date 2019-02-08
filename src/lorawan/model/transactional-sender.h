@@ -37,6 +37,26 @@ public:
   void SetInitialDelay (Time delay);
 
   /**
+   * Set the inter-transaction-delay
+   */
+  void SetInterTransactionDelay (Time interDelay);
+
+  /**
+   * Get the inter-transaction-delay
+   */
+  Time GetInterTransactionDelay (void) const;
+
+  /**
+   * Set the intra-transaction-delay
+   */
+  void SetIntraTransactionDelay (Time intraDelay);
+
+  /**
+   * Get the intra-transaction-delay
+   */
+  Time GetIntraTransactionDelay (void) const;
+
+  /**
    * Set packet size
    */
   void SetPacketSize (uint8_t size);
@@ -46,7 +66,15 @@ public:
    */
   void SetPacketSizeRandomVariable (Ptr <RandomVariableStream> rv);
 
-  uint32_t GetPacketCount ();
+  void SetDataPacketSize (uint8_t dataSize);
+
+  uint8_t GetDataPacketSize (void) const;
+
+  void SetPartialSignaturePacketSize (uint8_t sigSize);
+
+  uint8_t GetPartialSignaturePacketSize (void) const;
+
+  uint32_t GetPacketCount (void) const;
 
   void SetPacketCount (uint32_t count);
 
@@ -69,7 +97,7 @@ public:
 
 private:
   /**
-   * The interval between to consecutive send events
+   * The interval between to consecutive send events        TODO: replace this with inter-transmission-delay
    */
   Time m_interval;
 
@@ -77,6 +105,17 @@ private:
    * The initial delay of this application
    */
   Time m_initialDelay;
+
+  /**
+   * The interval between two consecutive transactions
+   */
+  Time interTransactionDelay;
+
+  /**
+   * The interval between the transmissions of two
+   * consecutive packets belonging to a transaction.
+   */
+  Time intraTransactionDelay;
 
   /**
    * The sending event scheduled as next
@@ -92,6 +131,16 @@ private:
    * The packet size.
    */
   uint8_t m_basePktSize;
+
+  /**
+   * The size of regular data packets
+   */
+  uint8_t dataPktSize;
+
+  /**
+   * The size of one of two signature packets
+   */
+  uint8_t sigPartPktSize;
 
   /**
    * The packets already sent.
