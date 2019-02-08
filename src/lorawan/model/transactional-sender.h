@@ -74,6 +74,10 @@ public:
 
   uint8_t GetPartialSignaturePacketSize (void) const;
 
+  void SetPacketsPerTransaction (uint32_t packets);
+
+  uint32_t GetPacketsPerTransaction (void) const;
+
   uint32_t GetPacketCount (void) const;
 
   void SetPacketCount (uint32_t count);
@@ -143,7 +147,12 @@ private:
   uint8_t sigPartPktSize;
 
   /**
-   * The packets already sent.
+   * The number of packets per transaction
+   */
+  uint32_t packetsPerTransaction;
+
+  /**
+   * The packets already sent in the current transaction
    */
   uint32_t packet_count;
 

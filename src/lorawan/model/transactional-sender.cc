@@ -41,6 +41,7 @@ TransactionalSender::TransactionalSender ()
   m_basePktSize (10),
   dataPktSize(42),      // regular data packets, [40 B + 2 B] counter per packet
   sigPartPktSize(34),   // one half of signature, [32 B + 2 B] counter per part
+  packetsPerTransaction(10),
   packet_count (0),
   m_pktSizeRV (0)
 
@@ -132,7 +133,8 @@ TransactionalSender::GetDataPacketSize (void) const
 }
 
 void
-TransactionalSender::SetPartialSignaturePacketSize (uint8_t sigSize) {
+TransactionalSender::SetPartialSignaturePacketSize (uint8_t sigSize)
+{
   sigPartPktSize = sigSize;
 }
 
@@ -141,6 +143,19 @@ TransactionalSender::GetPartialSignaturePacketSize (void) const
 {
   NS_LOG_FUNCTION (this);
   return sigPartPktSize;
+}
+
+void
+TransactionalSender::SetPacketsPerTransaction (uint32_t packets)
+{
+  packetsPerTransaction = packets;
+}
+
+uint32_t
+TransactionalSender::GetPacketsPerTransaction (void) const
+{
+  NS_LOG_FUNCTION (this);
+  return packetsPerTransaction;
 }
 
 uint32_t
@@ -162,21 +177,21 @@ TransactionalSender::SendPacket (void)
 
   Ptr<Packet> packet;
 
-  if (packet_count == 10) {
+  if (packet_count == packetsPerTransaction) {
 
     packet = Create<Packet> (sigPartPktSize);
     m_mac->Send (packet);
-    NS_LOG_UNCOND ("Sent signature packet 1/2 of size " << packet->GetSize () << " B");
+    NS_LOG_DEBUG ("Sent signature packet 1/2 of size " << packet->GetSize () << " B");
     ++packet_count;
     m_sendEvent = Simulator::Schedule (intraTransactionDelay, &TransactionalSender::SendPacket,
                                      this);
 
-  } else if (packet_count == 11) {
+  } else if (packet_count == packetsPerTransaction + 1) {
 
     SetPacketCount(0);
     packet = Create<Packet> (sigPartPktSize);
     m_mac->Send (packet);
-    NS_LOG_UNCOND ("Sent signature packet 2/2 of size " << packet->GetSize () << " B");
+    NS_LOG_DEBUG ("Sent signature packet 2/2 of size " << packet->GetSize () << " B");
     // resetting the counter (for the upcoming transaction)
     // next transaction is scheduled after the inter-transaction delay
     m_sendEvent = Simulator::Schedule (interTransactionDelay, &TransactionalSender::SendPacket,
@@ -187,7 +202,7 @@ TransactionalSender::SendPacket (void)
       // For some unknown reason, the packet size of the first packet of a transaction is always 9 B bigger...
       packet = Create<Packet> (dataPktSize-9);
       m_mac->Send (packet);
-      NS_LOG_UNCOND ("Sent a data packet of size " << packet->GetSize () << " B, packet count: " << packet_count);
+      NS_LOG_DEBUG ("Sent a data packet of size " << packet->GetSize () << " B, packet count: " << packet_count);
       ++packet_count;
       m_sendEvent = Simulator::Schedule (intraTransactionDelay, &TransactionalSender::SendPacket,
                                          this);
@@ -196,7 +211,7 @@ TransactionalSender::SendPacket (void)
 
     packet = Create<Packet> (dataPktSize);
     m_mac->Send (packet);
-    NS_LOG_UNCOND ("Sent a data packet of size " << packet->GetSize () << " B, packet count: " << packet_count);
+    NS_LOG_DEBUG ("Sent a data packet of size " << packet->GetSize () << " B, packet count: " << packet_count);
     ++packet_count;
     m_sendEvent = Simulator::Schedule (intraTransactionDelay, &TransactionalSender::SendPacket,
                                        this);
