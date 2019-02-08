@@ -14,7 +14,12 @@ namespace lorawan {
 
 NS_LOG_COMPONENT_DEFINE ("TransactionalSenderHelper");
 
-TransactionalSenderHelper::TransactionalSenderHelper ()
+TransactionalSenderHelper::TransactionalSenderHelper () :
+    dataPktSize(0),
+    sigPartPktSize(0),
+    packetsPerTransaction(0),
+    interTransactionDelay(Seconds(0)),
+    intraTransactionDelay(Seconds(0))
 {
   m_factory.SetTypeId ("ns3::TransactionalSender");
 
@@ -107,6 +112,12 @@ TransactionalSenderHelper::InstallPriv (Ptr<Node> node) const
       app->SetPacketSizeRandomVariable (m_pktSizeRV);
     }
 
+  if(dataPktSize != 0) app->SetDataPacketSize(dataPktSize);
+  if(sigPartPktSize != 0) app->SetPartialSignaturePacketSize(sigPartPktSize);
+  if(packetsPerTransaction != 0) app->SetPacketsPerTransaction(packetsPerTransaction);
+  if(intraTransactionDelay != Seconds(0)) app->SetIntraTransactionDelay(intraTransactionDelay);
+  if(interTransactionDelay != Seconds(0)) app->SetInterTransactionDelay(interTransactionDelay);
+
   app->SetNode (node);
   node->AddApplication (app);
 
@@ -129,6 +140,75 @@ void
 TransactionalSenderHelper::SetPacketSize (uint8_t size)
 {
   m_pktSize = size;
+}
+
+void
+TransactionalSenderHelper::SetDataPacketSize (uint8_t dataSize) {
+  dataPktSize = dataSize;
+}
+
+uint8_t
+TransactionalSenderHelper::GetDataPacketSize (void) const
+{
+  NS_LOG_FUNCTION (this);
+  return dataPktSize;
+}
+
+void
+TransactionalSenderHelper::SetPartialSignaturePacketSize (uint8_t sigSize)
+{
+  sigPartPktSize = sigSize;
+}
+
+uint8_t
+TransactionalSenderHelper::GetPartialSignaturePacketSize (void) const
+{
+  NS_LOG_FUNCTION (this);
+  return sigPartPktSize;
+}
+
+void
+TransactionalSenderHelper::SetPacketsPerTransaction (uint32_t packets)
+{
+  packetsPerTransaction = packets;
+}
+
+uint32_t
+TransactionalSenderHelper::GetPacketsPerTransaction (void) const
+{
+  NS_LOG_FUNCTION (this);
+  return packetsPerTransaction;
+}
+
+void
+TransactionalSenderHelper::SetInterTransactionDelay (Time interDelay)
+{
+  NS_LOG_FUNCTION (this << interDelay);
+  interTransactionDelay = interDelay;
+}
+
+
+Time
+TransactionalSenderHelper::GetInterTransactionDelay (void) const
+{
+  NS_LOG_FUNCTION (this);
+  return interTransactionDelay;
+}
+
+
+void
+TransactionalSenderHelper::SetIntraTransactionDelay (Time intraDelay)
+{
+  NS_LOG_FUNCTION (this << intraDelay);
+  intraTransactionDelay = intraDelay;
+}
+
+
+Time
+TransactionalSenderHelper::GetIntraTransactionDelay (void) const
+{
+  NS_LOG_FUNCTION (this);
+  return intraTransactionDelay;
 }
 
 }
