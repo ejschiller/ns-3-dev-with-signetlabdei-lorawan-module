@@ -20,18 +20,6 @@ public:
   static TypeId GetTypeId (void);
 
   /**
-   * Set the sending interval
-   * \param interval the interval between two packet sendings
-   */
-  void SetInterval (Time interval);
-
-  /**
-   * Get the sending inteval
-   * \returns the interval between two packet sends
-   */
-  Time GetInterval (void) const;
-
-  /**
    * Set the initial delay of this application
    */
   void SetInitialDelay (Time delay);
@@ -100,11 +88,6 @@ public:
   void StopApplication (void);
 
 private:
-  /**
-   * The interval between to consecutive send events        TODO: replace this with inter-transmission-delay
-   */
-  Time m_interval;
-
   /**
    * The initial delay of this application
    */

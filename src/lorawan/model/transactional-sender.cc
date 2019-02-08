@@ -20,21 +20,25 @@ TransactionalSender::GetTypeId (void)
   static TypeId tid = TypeId ("ns3::TransactionalSender")
     .SetParent<Application> ()
     .AddConstructor<TransactionalSender> ()
-    .SetGroupName ("lorawan")
-    .AddAttribute ("Interval", "The interval between packet sends of this app",
+    .SetGroupName ("lorawan");/*
+    .AddAttribute ("InterTransactionDelay", "The interval between two consecutive transactions in this app",
                    TimeValue (Seconds (0)),
-                   MakeTimeAccessor (&TransactionalSender::GetInterval,
-                                     &TransactionalSender::SetInterval),
-                   MakeTimeChecker ());
-  // .AddAttribute ("PacketSizeRandomVariable", "The random variable that determines the shape of the packet size, in bytes",
-  //                StringValue ("ns3::UniformRandomVariable[Min=0,Max=10]"),
-  //                MakePointerAccessor (&TransactionalSender::m_pktSizeRV),
-  //                MakePointerChecker <RandomVariableStream>());
+                   MakeTimeAccessor (&TransactionalSender::GetInterTransactionDelay,
+                                     &TransactionalSender::SetInterTransactionDelay),
+                   MakeTimeChecker ())
+     .AddAttribute ("IntraTransactionDelay", "The interval between two consecutive packets belonging to a transaction in this app.",
+                    TimeValue (Seconds (0)),
+                    MakeTimeAccessor (&TransactionalSender::GetIntraTransactionDelay,
+                                      &TransactionalSender::SetIntraTransactionDelay),
+                    MakeTimeChecker ())
+     .AddAttribute ("PacketSizeRandomVariable", "The random variable that determines the shape of the packet size, in bytes",
+                    StringValue ("ns3::UniformRandomVariable[Min=0,Max=10]"),
+                    MakePointerAccessor (&TransactionalSender::m_pktSizeRV),
+                    MakePointerChecker <RandomVariableStream>());*/
   return tid;
 }
 
-TransactionalSender::TransactionalSender ()
-  : m_interval (Seconds (10)),
+TransactionalSender::TransactionalSender () :
   m_initialDelay (Seconds (1)),
   interTransactionDelay (Hours (2)),
   intraTransactionDelay (Seconds (10)),
@@ -54,19 +58,6 @@ TransactionalSender::~TransactionalSender ()
   NS_LOG_FUNCTION_NOARGS ();
 }
 
-void
-TransactionalSender::SetInterval (Time interval)
-{
-  NS_LOG_FUNCTION (this << interval);
-  m_interval = interval;
-}
-
-Time
-TransactionalSender::GetInterval (void) const
-{
-  NS_LOG_FUNCTION (this);
-  return m_interval;
-}
 
 void
 TransactionalSender::SetInitialDelay (Time delay)

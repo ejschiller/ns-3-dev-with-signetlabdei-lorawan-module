@@ -26,15 +26,10 @@ TransactionalSenderHelper::TransactionalSenderHelper () :
   // m_factory.Set ("PacketSizeRandomVariable", StringValue
   //                  ("ns3::ParetoRandomVariable[Bound=10|Shape=2.5]"));
 
-  m_initialDelay = CreateObject<UniformRandomVariable> ();
-  m_initialDelay->SetAttribute ("Min", DoubleValue (0));
+  m_initialDelayRV = CreateObject<UniformRandomVariable> ();
+  m_initialDelayRV->SetAttribute ("Min", DoubleValue (0));
+  m_initialDelayRV->SetAttribute ("Max", DoubleValue (2000));
 
-  m_intervalProb = CreateObject<UniformRandomVariable> ();
-  m_intervalProb->SetAttribute ("Min", DoubleValue (0));
-  m_intervalProb->SetAttribute ("Max", DoubleValue (1));
-
-  m_pktSize = 10;
-  m_pktSizeRV = 0;
 }
 
 TransactionalSenderHelper::~TransactionalSenderHelper ()
@@ -72,45 +67,7 @@ TransactionalSenderHelper::InstallPriv (Ptr<Node> node) const
 
   Ptr<TransactionalSender> app = m_factory.Create<TransactionalSender> ();
 
-  Time interval;
-  if (m_period == Seconds (0))
-    {
-      double intervalProb = m_intervalProb->GetValue ();
-      NS_LOG_DEBUG ("IntervalProb = " << intervalProb);
-
-      // Based on TR 45.820
-      if (intervalProb < 0.4)
-        {
-          interval = Days (1);
-        }
-      else if (0.4 <= intervalProb  && intervalProb < 0.8)
-        {
-          interval = Hours (2);
-        }
-      else if (0.8 <= intervalProb  && intervalProb < 0.95)
-        {
-          interval = Hours (1);
-        }
-      else
-        {
-          interval = Minutes (30);
-        }
-    }
-  else
-    {
-      interval = m_period;
-    }
-
-  app->SetInterval (interval);
-  NS_LOG_DEBUG ("Created an application with interval = " <<
-                interval.GetHours () << " hours");
-
-  app->SetInitialDelay (Seconds (m_initialDelay->GetValue (0, interval.GetSeconds ())));
-  app->SetPacketSize (m_pktSize);
-  if (m_pktSizeRV)
-    {
-      app->SetPacketSizeRandomVariable (m_pktSizeRV);
-    }
+  app->SetInitialDelay (Seconds (m_initialDelayRV->GetValue()));
 
   if(dataPktSize != 0) app->SetDataPacketSize(dataPktSize);
   if(sigPartPktSize != 0) app->SetPartialSignaturePacketSize(sigPartPktSize);
@@ -122,24 +79,6 @@ TransactionalSenderHelper::InstallPriv (Ptr<Node> node) const
   node->AddApplication (app);
 
   return app;
-}
-
-void
-TransactionalSenderHelper::SetPeriod (Time period)
-{
-  m_period = period;
-}
-
-void
-TransactionalSenderHelper::SetPacketSizeRandomVariable (Ptr <RandomVariableStream> rv)
-{
-  m_pktSizeRV = rv;
-}
-
-void
-TransactionalSenderHelper::SetPacketSize (uint8_t size)
-{
-  m_pktSize = size;
 }
 
 void
