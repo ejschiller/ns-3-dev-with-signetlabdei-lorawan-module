@@ -179,23 +179,33 @@ TransactionalSender::SendPacket (void)
 
   Ptr<Packet> packet;
 
-  TransactionalPacketHeader testHeader;
-  testHeader.SetPacketId(packet_count);
-  testHeader.SetTransactionId(372);
+  // Preparing the Header to be put on top of the packet's payload
+  TransactionalPacketHeader transactionalHeader;
+  transactionalHeader.SetPacketId(packet_count);
+  transactionalHeader.SetTransactionId(transaction_count);
+
+  packet = Create<Packet> ();
+  packet->AddHeader (transactionalHeader);
+
+  // Getting the packet's current size in B
+  uint32_t packetSize = packet->GetSize ();
+
+  // Asserting, that the packet size caused by the header is not greater than
+  // the default signature- resp. data-packet sizes.
+  NS_ASSERT(packetSize <= sigPartPktSize && packetSize <= dataPktSize);
 
   if (packet_count == packetsPerTransaction) {
-
-    packet = Create<Packet> (sigPartPktSize);
-    packet->AddHeader (testHeader);
+    // Filling the packet payload up with zeroes until the specified size.
+    packet->AddPaddingAtEnd (sigPartPktSize - packetSize);
     m_mac->Send (packet);
     NS_LOG_DEBUG ("Sent signature packet 1/2 of size " << packet->GetSize () << " B");
     ++packet_count;
 
-    TransactionalPacketHeader testHeaderReceive;
+    /*TransactionalPacketHeader testHeaderReceive;
     packet->RemoveHeader (testHeaderReceive);
 
     NS_LOG_UNCOND("testHeaderReceive->GetPacketId ()  = " << testHeaderReceive.GetPacketId ());
-    NS_LOG_UNCOND("testHeaderReceive->GetTransactionId ()  = " << testHeaderReceive.GetTransactionId ());
+    NS_LOG_UNCOND("testHeaderReceive->GetTransactionId ()  = " << testHeaderReceive.GetTransactionId ());*/
 
     m_sendEvent = Simulator::Schedule (intraTransactionDelay, &TransactionalSender::SendPacket,
                                      this);
@@ -203,7 +213,10 @@ TransactionalSender::SendPacket (void)
   } else if (packet_count == packetsPerTransaction + 1) {
     // resetting the counter (for the upcoming transaction)
     SetPacketCount(0);
-    packet = Create<Packet> (sigPartPktSize);
+    // incrementing the transaction number (id, counter)
+    ++transaction_count;
+    // Filling the packet payload up with zeroes until the specified size.
+    packet->AddPaddingAtEnd (sigPartPktSize - packetSize);
     m_mac->Send (packet);
     NS_LOG_DEBUG ("Sent signature packet 2/2 of size " << packet->GetSize () << " B");
     // next transaction is scheduled after the inter-transaction delay
@@ -211,9 +224,9 @@ TransactionalSender::SendPacket (void)
                                      this);
 
   } else if (packet_count == 0) {
-
+      // Filling the packet payload up with zeroes until the specified size.
       // For some unknown reason, the packet size of the first packet of a transaction is always 9 B bigger...
-      packet = Create<Packet> (dataPktSize-9);
+      packet->AddPaddingAtEnd (dataPktSize - packetSize - 9);
       m_mac->Send (packet);
       NS_LOG_DEBUG ("Sent a data packet of size " << packet->GetSize () << " B, packet count: " << packet_count);
       ++packet_count;
@@ -221,8 +234,8 @@ TransactionalSender::SendPacket (void)
                                          this);
 
   } else {
-
-    packet = Create<Packet> (dataPktSize);
+    // Filling the packet payload up with zeroes until the specified size.
+    packet->AddPaddingAtEnd (dataPktSize - packetSize);
     m_mac->Send (packet);
     NS_LOG_DEBUG ("Sent a data packet of size " << packet->GetSize () << " B, packet count: " << packet_count);
     ++packet_count;
