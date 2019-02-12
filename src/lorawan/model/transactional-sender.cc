@@ -6,6 +6,7 @@
 #include "ns3/double.h"
 #include "ns3/string.h"
 #include "ns3/lora-net-device.h"
+#include "ns3/transactional-packet-header.h"
 
 namespace ns3 {
 namespace lorawan {
@@ -47,6 +48,7 @@ TransactionalSender::TransactionalSender () :
   sigPartPktSize(34),   // one half of signature, [32 B + 2 B] counter per part
   packetsPerTransaction(10),
   packet_count (0),
+  transaction_count(0),
   m_pktSizeRV (0)
 
 {
@@ -137,27 +139,36 @@ TransactionalSender::GetPartialSignaturePacketSize (void) const
 }
 
 void
-TransactionalSender::SetPacketsPerTransaction (uint32_t packets)
+TransactionalSender::SetPacketsPerTransaction (uint16_t packets)
 {
   packetsPerTransaction = packets;
 }
 
-uint32_t
+uint16_t
 TransactionalSender::GetPacketsPerTransaction (void) const
 {
   NS_LOG_FUNCTION (this);
   return packetsPerTransaction;
 }
 
-uint32_t
+uint16_t
 TransactionalSender::GetPacketCount (void) const {
   return packet_count;
 }
 
+void
+TransactionalSender::SetPacketCount (uint16_t count) {
+  packet_count = count;
+}
+
+uint16_t
+TransactionalSender::GetTransactionCount (void) const {
+  return transaction_count;
+}
 
 void
-TransactionalSender::SetPacketCount (uint32_t count) {
-  packet_count = count;
+TransactionalSender::SetTransactionCount (uint16_t count) {
+  transaction_count = count;
 }
 
 
@@ -168,22 +179,33 @@ TransactionalSender::SendPacket (void)
 
   Ptr<Packet> packet;
 
+  TransactionalPacketHeader testHeader;
+  testHeader.SetPacketId(packet_count);
+  testHeader.SetTransactionId(372);
+
   if (packet_count == packetsPerTransaction) {
 
     packet = Create<Packet> (sigPartPktSize);
+    packet->AddHeader (testHeader);
     m_mac->Send (packet);
     NS_LOG_DEBUG ("Sent signature packet 1/2 of size " << packet->GetSize () << " B");
     ++packet_count;
+
+    TransactionalPacketHeader testHeaderReceive;
+    packet->RemoveHeader (testHeaderReceive);
+
+    NS_LOG_UNCOND("testHeaderReceive->GetPacketId ()  = " << testHeaderReceive.GetPacketId ());
+    NS_LOG_UNCOND("testHeaderReceive->GetTransactionId ()  = " << testHeaderReceive.GetTransactionId ());
+
     m_sendEvent = Simulator::Schedule (intraTransactionDelay, &TransactionalSender::SendPacket,
                                      this);
 
   } else if (packet_count == packetsPerTransaction + 1) {
-
+    // resetting the counter (for the upcoming transaction)
     SetPacketCount(0);
     packet = Create<Packet> (sigPartPktSize);
     m_mac->Send (packet);
     NS_LOG_DEBUG ("Sent signature packet 2/2 of size " << packet->GetSize () << " B");
-    // resetting the counter (for the upcoming transaction)
     // next transaction is scheduled after the inter-transaction delay
     m_sendEvent = Simulator::Schedule (interTransactionDelay, &TransactionalSender::SendPacket,
                                      this);

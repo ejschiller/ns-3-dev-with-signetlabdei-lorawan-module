@@ -62,13 +62,17 @@ public:
 
   uint8_t GetPartialSignaturePacketSize (void) const;
 
-  void SetPacketsPerTransaction (uint32_t packets);
+  void SetPacketsPerTransaction (uint16_t packets);
 
-  uint32_t GetPacketsPerTransaction (void) const;
+  uint16_t GetPacketsPerTransaction (void) const;
 
-  uint32_t GetPacketCount (void) const;
+  uint16_t GetPacketCount (void) const;
 
-  void SetPacketCount (uint32_t count);
+  void SetPacketCount (uint16_t count);
+
+  uint16_t GetTransactionCount (void) const;
+
+  void SetTransactionCount (uint16_t count);
 
   void IncrementPacketCount ();
 
@@ -132,12 +136,17 @@ private:
   /**
    * The number of packets per transaction
    */
-  uint32_t packetsPerTransaction;
+  uint16_t packetsPerTransaction;
 
   /**
    * The packets already sent in the current transaction
    */
-  uint32_t packet_count;
+  uint16_t packet_count;
+
+  /**
+   * The transactions already conducted in the current simulation
+   */
+  uint16_t transaction_count;
 
   /**
    * The random variable that adds bytes to the packet size

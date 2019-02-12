@@ -107,12 +107,12 @@ TransactionalSenderHelper::GetPartialSignaturePacketSize (void) const
 }
 
 void
-TransactionalSenderHelper::SetPacketsPerTransaction (uint32_t packets)
+TransactionalSenderHelper::SetPacketsPerTransaction (uint16_t packets)
 {
   packetsPerTransaction = packets;
 }
 
-uint32_t
+uint16_t
 TransactionalSenderHelper::GetPacketsPerTransaction (void) const
 {
   NS_LOG_FUNCTION (this);

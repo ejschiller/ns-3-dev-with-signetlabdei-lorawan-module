@@ -23,24 +23,28 @@ public:
   virtual ~TransactionalPacketHeader ();
 
   /**
-   * Set the header data.
-   * \param data The data.
+   * Set the transaction ID.
+   * \param data The transaction ID.
    */
-  void SetData (uint16_t data);
-  /**
-   * Get the header data.
-   * \return The data.
-   */
-  uint16_t GetData (void) const;
+  void SetTransactionId (uint16_t id);
 
   /**
-   * \brief Get the type ID.
-   * \return the object TypeId
+   * Get the transaction ID.
+   * \return The transaction ID.
    */
+  uint16_t GetTransactionId (void) const;
 
-  void SetContent (uint32_t data);
+  /**
+   * Set the packet ID.
+   * \param data The packet ID.
+   */
+  void SetPacketId (uint16_t id);
 
-  uint32_t GetContent (void) const;
+  /**
+   * Get the packet ID.
+   * \return The packet ID.
+   */
+  uint16_t GetPacketId (void) const;
 
   static TypeId GetTypeId (void);
   virtual TypeId GetInstanceTypeId (void) const;
@@ -48,9 +52,11 @@ public:
   virtual void Serialize (Buffer::Iterator start) const;
   virtual uint32_t Deserialize (Buffer::Iterator start);
   virtual uint32_t GetSerializedSize (void) const;
+
 private:
-  uint16_t m_data;  //!< Header data
-  uint32_t m_content;
+  uint16_t transaction_id;
+  uint16_t packet_id;
+
 };
 }
 
