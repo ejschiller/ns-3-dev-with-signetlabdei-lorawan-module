@@ -23,6 +23,18 @@ public:
   virtual ~TransactionalPacketHeader ();
 
   /**
+   * Set the node UID.
+   * \param data The node UID.
+   */
+  void SetNodeUid (uint32_t uid);
+
+  /**
+   * Get the node UID.
+   * \return The node UID.
+   */
+  uint32_t GetNodeUid (void) const;
+
+  /**
    * Set the transaction ID.
    * \param data The transaction ID.
    */
@@ -54,6 +66,7 @@ public:
   virtual uint32_t GetSerializedSize (void) const;
 
 private:
+  uint32_t node_uid;
   uint16_t transaction_id;
   uint16_t packet_id;
 

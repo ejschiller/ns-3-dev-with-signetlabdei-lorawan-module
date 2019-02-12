@@ -43,13 +43,11 @@ TransactionalSender::TransactionalSender () :
   m_initialDelay (Seconds (1)),
   interTransactionDelay (Hours (2)),
   intraTransactionDelay (Seconds (10)),
-  m_basePktSize (10),
   dataPktSize(42),      // regular data packets, [40 B + 2 B] counter per packet
   sigPartPktSize(34),   // one half of signature, [32 B + 2 B] counter per part
   packetsPerTransaction(10),
   packet_count (0),
-  transaction_count(0),
-  m_pktSizeRV (0)
+  transaction_count(0)
 
 {
   NS_LOG_FUNCTION_NOARGS ();
@@ -175,14 +173,21 @@ TransactionalSender::SetTransactionCount (uint16_t count) {
 void
 TransactionalSender::SendPacket (void)
 {
+  // If this is the first packet transmission, save the nodeUID for later use
+  if(transaction_count == 0 && packet_count == 0) {
+      nodeUID = m_mac->GetDevice ()->GetNode ()->GetId ();
+  }
+
   NS_LOG_FUNCTION (this);
+
 
   Ptr<Packet> packet;
 
   // Preparing the Header to be put on top of the packet's payload
   TransactionalPacketHeader transactionalHeader;
-  transactionalHeader.SetPacketId(packet_count);
+  transactionalHeader.SetNodeUid(nodeUID);
   transactionalHeader.SetTransactionId(transaction_count);
+  transactionalHeader.SetPacketId(packet_count);
 
   packet = Create<Packet> ();
   packet->AddHeader (transactionalHeader);
@@ -204,6 +209,7 @@ TransactionalSender::SendPacket (void)
     /*TransactionalPacketHeader testHeaderReceive;
     packet->RemoveHeader (testHeaderReceive);
 
+    NS_LOG_UNCOND("testHeaderReceive->GetNodeUid ()  = " << testHeaderReceive.GetNodeUid ());
     NS_LOG_UNCOND("testHeaderReceive->GetPacketId ()  = " << testHeaderReceive.GetPacketId ());
     NS_LOG_UNCOND("testHeaderReceive->GetTransactionId ()  = " << testHeaderReceive.GetTransactionId ());*/
 

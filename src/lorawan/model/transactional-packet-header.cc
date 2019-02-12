@@ -43,14 +43,15 @@ TransactionalPacketHeader::Print (std::ostream &os) const
 uint32_t
 TransactionalPacketHeader::GetSerializedSize (void) const
 {
-  // we reserve 4 bytes for our header.
-  return 4;
+  // we reserve 8 bytes for our header.
+  return 8;
 }
 void
 TransactionalPacketHeader::Serialize (Buffer::Iterator start) const
 {
   // we can serialize two bytes at the start of the buffer.
   // we write them in network byte order.
+  start.WriteHtonU32 (node_uid);
   start.WriteHtonU16 (transaction_id);
   start.WriteHtonU16 (packet_id);
 }
@@ -60,11 +61,22 @@ TransactionalPacketHeader::Deserialize (Buffer::Iterator start)
   // we can deserialize two bytes from the start of the buffer.
   // we read them in network byte order and store them
   // in host byte order.
-  transaction_id = start.ReadNtohU16 ();
-  packet_id = start.ReadNtohU16 ();
+  node_uid =        start.ReadNtohU32 ();
+  transaction_id =  start.ReadNtohU16 ();
+  packet_id =       start.ReadNtohU16 ();
 
   // we return the number of bytes effectively read.
-  return 2;
+  return 8;
+}
+
+void
+TransactionalPacketHeader::SetNodeUid (uint32_t uid) {
+    node_uid = uid;
+}
+
+uint32_t
+TransactionalPacketHeader::GetNodeUid (void) const {
+    return node_uid;
 }
 
 void

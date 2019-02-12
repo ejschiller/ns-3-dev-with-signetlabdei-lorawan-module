@@ -119,6 +119,11 @@ private:
   Ptr<LoraMac> m_mac;
 
   /**
+  *  The node's UID retrieved via m_mac->GetDevice ()->GetNode ()->GetId ()
+  */
+  uint32_t nodeUID;
+
+  /**
    * The packet size.
    */
   uint8_t m_basePktSize;
