@@ -24,6 +24,8 @@
 #include "ns3/building-penetration-loss.h"
 #include "ns3/building-allocator.h"
 #include "ns3/buildings-helper.h"
+#include "ns3/network-server-helper.h"
+#include "ns3/forwarder-helper.h"
 #include <algorithm>
 #include <ctime>
 
@@ -33,10 +35,10 @@ using namespace lorawan;
 NS_LOG_COMPONENT_DEFINE ("ComplexLorawanNetworkExample");
 
 // Network settings
-int nDevices = 30;
-int nGateways = 15;
-double simulationTime = 10000;
-int appPeriodSeconds = 600;
+int nDevices = 40;
+int nGateways = 1;
+double simulationTime = 1000;
+int appPeriodSeconds = 60;
 
 // Output control
 bool print = true;
@@ -61,18 +63,18 @@ int main (int argc, char *argv[])
   // LogComponentEnable("LoraChannel", LOG_LEVEL_INFO);
   // LogComponentEnable("LoraPhy", LOG_LEVEL_ALL);
   // LogComponentEnable("EndDeviceLoraPhy", LOG_LEVEL_ALL);
-  LogComponentEnable("GatewayLoraPhy", LOG_LEVEL_ALL);
+  //LogComponentEnable("GatewayLoraPhy", LOG_LEVEL_ALL);
   // LogComponentEnable("LoraInterferenceHelper", LOG_LEVEL_ALL);
   // LogComponentEnable("LoraMac", LOG_LEVEL_ALL);
-  // LogComponentEnable("EndDeviceLoraMac", LOG_LEVEL_ALL);
+  LogComponentEnable("EndDeviceLoraMac", LOG_LEVEL_ALL);
   //LogComponentEnable("GatewayLoraMac", LOG_LEVEL_ALL);
   // LogComponentEnable("LogicalLoraChannelHelper", LOG_LEVEL_ALL);
   // LogComponentEnable("LogicalLoraChannel", LOG_LEVEL_ALL);
-  // LogComponentEnable("LoraHelper", LOG_LEVEL_ALL);
+   LogComponentEnable("LoraHelper", LOG_LEVEL_ALL);
   // LogComponentEnable("LoraPhyHelper", LOG_LEVEL_ALL);
   // LogComponentEnable("LoraMacHelper", LOG_LEVEL_ALL);
-  LogComponentEnable("PeriodicSenderHelper", LOG_LEVEL_ALL);
-  LogComponentEnable("PeriodicSender", LOG_LEVEL_DEBUG);
+  //LogComponentEnable("PeriodicSenderHelper", LOG_LEVEL_ALL);
+  //LogComponentEnable("PeriodicSender", LOG_LEVEL_DEBUG);
   // LogComponentEnable("LoraMacHeader", LOG_LEVEL_ALL);
   // LogComponentEnable("LoraFrameHeader", LOG_LEVEL_ALL);
   // LogComponentEnable("NetworkScheduler", LOG_LEVEL_ALL);
@@ -80,6 +82,7 @@ int main (int argc, char *argv[])
   // LogComponentEnable("NetworkController", LOG_LEVEL_ALL);
   //LogComponentEnable("LoraPacketTracker", LOG_LEVEL_ALL);
   //LogComponentEnable ("MobilityHelper", LOG_LEVEL_ALL);
+  LogComponentEnable ("NetworkServerHelper", LOG_LEVEL_ALL);
   LogComponentEnableAll (LOG_PREFIX_FUNC);
   LogComponentEnableAll (LOG_PREFIX_NODE);
   LogComponentEnableAll (LOG_PREFIX_TIME);
@@ -262,7 +265,7 @@ int main (int argc, char *argv[])
   // Create the LoraHelper
   LoraHelper helper = LoraHelper ();
   helper.EnablePacketTracking ("performance"); // Output filename
-  // helper.EnableSimulationTimePrinting ();
+  //helper.EnableSimulationTimePrinting ();
 
   /************************
    *  Create End Devices  *
@@ -295,7 +298,10 @@ int main (int argc, char *argv[])
       Ptr<Node> node = *j;
       Ptr<LoraNetDevice> loraNetDevice = node->GetDevice (0)->GetObject<LoraNetDevice> ();
       Ptr<LoraPhy> phy = loraNetDevice->GetPhy ();
-    }
+      // Set message type to CONFIRMED_DATA_UP (ACK) for all end devices
+      Ptr<EndDeviceLoraMac> mac = loraNetDevice->GetMac ()->GetObject<EndDeviceLoraMac>();
+      mac->SetMType (LoraMacHeader::CONFIRMED_DATA_UP);
+  }
 
   /*********************
    *  Create Gateways  *
@@ -320,15 +326,6 @@ int main (int argc, char *argv[])
 
   NS_LOG_DEBUG ("Completed configuration");
 
-  /*********************************************************************
-   *  Set message type to CONFIRMED_DATA_UP (ACK) for all end devices  *
-   *********************************************************************/
-  for(int i = 0; i < nDevices; i++) {
-      Ptr<LoraMac> edMacTemp = endDevices.Get (i)->GetDevice (0)->GetObject<LoraNetDevice> ()->GetMac ();
-      Ptr<EndDeviceLoraMac> edLoraMacTemp = edMacTemp->GetObject<EndDeviceLoraMac> ();
-      edLoraMacTemp->SetMType (LoraMacHeader::CONFIRMED_DATA_UP);
-  }
-
   /*********************************************
    *  Install applications on the end devices  *
    *********************************************/
@@ -343,6 +340,19 @@ int main (int argc, char *argv[])
    appContainer.Start (Seconds (0));
    appContainer.Stop (appStopTime);
 
+
+   NodeContainer networkServers;
+   networkServers.Create (1);
+
+   // Install the SimpleNetworkServer application on the network server
+   NetworkServerHelper networkServerHelper;
+   networkServerHelper.SetGateways (gateways);
+   networkServerHelper.SetEndDevices (endDevices);
+   networkServerHelper.Install (networkServers);
+
+   // Install the Forwarder application on the gateways
+   ForwarderHelper forwarderHelper;
+   forwarderHelper.Install (gateways);
 
   /**********************
    * Print output files *
