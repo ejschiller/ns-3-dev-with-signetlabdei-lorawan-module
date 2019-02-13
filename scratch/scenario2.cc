@@ -1,7 +1,7 @@
 /*
- * This script simulates a complex scenario with multiple gateways and end
- * devices. The metric of interest for this script is the throughput of the
- * network.
+ * This script simulates a Lora network with device positions based on extracted
+ * geographical positions of real devices in the Zurich area.
+ * Scenario #2: Periodical transmission of ACKnowledged packets.
  */
 
 #include "ns3/end-device-lora-phy.h"
@@ -20,12 +20,10 @@
 #include "ns3/random-variable-stream.h"
 #include "ns3/periodic-sender-helper.h"
 #include "ns3/command-line.h"
-#include "ns3/network-server-helper.h"
 #include "ns3/correlated-shadowing-propagation-loss-model.h"
 #include "ns3/building-penetration-loss.h"
 #include "ns3/building-allocator.h"
 #include "ns3/buildings-helper.h"
-#include "ns3/forwarder-helper.h"
 #include <algorithm>
 #include <ctime>
 
@@ -35,8 +33,8 @@ using namespace lorawan;
 NS_LOG_COMPONENT_DEFINE ("ComplexLorawanNetworkExample");
 
 // Network settings
-int nDevices = 2;
-int nGateways = 1;
+int nDevices = 30;
+int nGateways = 15;
 double simulationTime = 10000;
 int appPeriodSeconds = 600;
 
@@ -78,7 +76,6 @@ int main (int argc, char *argv[])
   // LogComponentEnable("LoraMacHeader", LOG_LEVEL_ALL);
   // LogComponentEnable("LoraFrameHeader", LOG_LEVEL_ALL);
   // LogComponentEnable("NetworkScheduler", LOG_LEVEL_ALL);
-  // LogComponentEnable("NetworkServer", LOG_LEVEL_ALL);
   // LogComponentEnable("NetworkStatus", LOG_LEVEL_ALL);
   // LogComponentEnable("NetworkController", LOG_LEVEL_ALL);
   //LogComponentEnable("LoraPacketTracker", LOG_LEVEL_ALL);
@@ -267,12 +264,6 @@ int main (int argc, char *argv[])
   helper.EnablePacketTracking ("performance"); // Output filename
   // helper.EnableSimulationTimePrinting ();
 
-  //Create the NetworkServerHelper
-  NetworkServerHelper nsHelper = NetworkServerHelper ();
-
-  //Create the ForwarderHelper
-  ForwarderHelper forHelper = ForwarderHelper ();
-
   /************************
    *  Create End Devices  *
    ************************/
@@ -352,22 +343,6 @@ int main (int argc, char *argv[])
    appContainer.Start (Seconds (0));
    appContainer.Stop (appStopTime);
 
-
-  /**************************
-   *  Create Network Server  *
-   ***************************/
-
-  // Create the NS node
-  NodeContainer networkServer;
-  networkServer.Create (1);
-
-  // Create a NS for the network
-  nsHelper.SetEndDevices (endDevices);
-  nsHelper.SetGateways (gateways);
-  nsHelper.Install (networkServer);
-
-  //Create a forwarder for each gateway
-  forHelper.Install (gateways);
 
   /**********************
    * Print output files *

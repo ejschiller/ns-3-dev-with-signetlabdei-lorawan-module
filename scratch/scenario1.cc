@@ -1,7 +1,7 @@
 /*
- * This script simulates a complex scenario with multiple gateways and end
- * devices. The metric of interest for this script is the throughput of the
- * network.
+ * This script simulates a Lora network with device positions based on extracted
+ * geographical positions of real devices in the Zurich area.
+ * Scenario #1: Periodical transmission of non-acknowledged packets.
  */
 
 #include "ns3/end-device-lora-phy.h"
@@ -35,9 +35,9 @@ using namespace lorawan;
 NS_LOG_COMPONENT_DEFINE ("ComplexLorawanNetworkExample");
 
 // Network settings
-int nDevices = 200;
-int nGateways = 100;
-double simulationTime = 100000;
+int nDevices = 30;
+int nGateways = 15;
+double simulationTime = 1000;
 int appPeriodSeconds = 100;
 
 // Output control
