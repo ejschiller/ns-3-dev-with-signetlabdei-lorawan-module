@@ -35,10 +35,9 @@ using namespace lorawan;
 NS_LOG_COMPONENT_DEFINE ("ComplexLorawanNetworkExample");
 
 // Network settings
-int nDevices = 30;
-int nGateways = 15;
-double simulationTime = 1000;
-//int appPeriodSeconds = 100;
+int nDevices = 2;
+int nGateways = 1;
+double simulationTime = 60000;
 
 // Output control
 bool print = true;
