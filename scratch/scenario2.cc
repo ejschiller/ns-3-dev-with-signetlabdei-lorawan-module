@@ -17,28 +17,22 @@
 #include "ns3/mobility-helper.h"
 #include "ns3/position-allocator.h"
 #include "ns3/double.h"
-#include "ns3/random-variable-stream.h"
 #include "ns3/periodic-sender-helper.h"
 #include "ns3/command-line.h"
-#include "ns3/correlated-shadowing-propagation-loss-model.h"
-#include "ns3/building-penetration-loss.h"
-#include "ns3/building-allocator.h"
-#include "ns3/buildings-helper.h"
 #include "ns3/network-server-helper.h"
 #include "ns3/forwarder-helper.h"
-#include <algorithm>
-#include <ctime>
 
 using namespace ns3;
 using namespace lorawan;
 
-NS_LOG_COMPONENT_DEFINE ("ComplexLorawanNetworkExample");
+NS_LOG_COMPONENT_DEFINE ("Scenario2");
 
 // Network settings
 int nDevices = 40;
 int nGateways = 1;
 double simulationTime = 1000;
 int appPeriodSeconds = 60;
+int packetSize = 32;
 
 // Output control
 bool print = true;
@@ -59,7 +53,7 @@ int main (int argc, char *argv[])
   cmd.Parse (argc, argv);
 
   // Set up logging
-  //LogComponentEnable ("ComplexLorawanNetworkExample", LOG_LEVEL_ALL);
+  LogComponentEnable ("Scenario2", LOG_LEVEL_ALL);
   // LogComponentEnable("LoraChannel", LOG_LEVEL_INFO);
   // LogComponentEnable("LoraPhy", LOG_LEVEL_ALL);
   // LogComponentEnable("EndDeviceLoraPhy", LOG_LEVEL_ALL);
@@ -232,8 +226,6 @@ int main (int argc, char *argv[])
       ++countGW;
   }
 
-
-
   mobilityGw.SetPositionAllocator (positionAllocGw);
   mobilityGw.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
 
@@ -333,8 +325,7 @@ int main (int argc, char *argv[])
    Time appStopTime = Seconds (simulationTime);
    PeriodicSenderHelper appHelper = PeriodicSenderHelper ();
    appHelper.SetPeriod (Seconds (appPeriodSeconds));
-   appHelper.SetPacketSize (23);
-   Ptr <RandomVariableStream> rv = CreateObjectWithAttributes<UniformRandomVariable> ("Min", DoubleValue (0), "Max", DoubleValue (10));
+   appHelper.SetPacketSize (packetSize);
    ApplicationContainer appContainer = appHelper.Install (endDevices);
 
    appContainer.Start (Seconds (0));
