@@ -31,7 +31,9 @@ namespace lorawan {
 
 NS_LOG_COMPONENT_DEFINE ("NetworkServerHelper");
 
-NetworkServerHelper::NetworkServerHelper ()
+NetworkServerHelper::NetworkServerHelper () :
+  m_collectStats(false),
+  m_transactionMode(false)
 {
   m_factory.SetTypeId ("ns3::NetworkServer");
   p2pHelper.SetDeviceAttribute ("DataRate", StringValue ("5Mbps"));
@@ -60,6 +62,24 @@ NetworkServerHelper::SetEndDevices (NodeContainer endDevices)
   m_endDevices = endDevices;
 }
 
+void
+NetworkServerHelper::SetSimulationTime (Time stopTime)
+{
+  simulationTime = stopTime;
+}
+
+void
+NetworkServerHelper::EnableTransactionMode (void)
+{
+  m_transactionMode = true;
+}
+
+void
+NetworkServerHelper::EnableStatsCollection (void)
+{
+  m_collectStats = true;
+}
+
 ApplicationContainer
 NetworkServerHelper::Install (Ptr<Node> node)
 {
@@ -84,6 +104,11 @@ NetworkServerHelper::InstallPriv (Ptr<Node> node)
   NS_LOG_FUNCTION (this << node);
 
   Ptr<NetworkServer> app = m_factory.Create<NetworkServer> ();
+
+  if(m_collectStats) app->EnableStatsCollection ();
+  if(m_transactionMode) app->EnableTransactionMode ();
+
+  app->SetStopTime (simulationTime);
 
   app->SetNode (node);
   node->AddApplication (app);

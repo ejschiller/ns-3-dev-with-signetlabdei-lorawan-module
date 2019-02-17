@@ -61,6 +61,20 @@ public:
    */
   void SetEndDevices (NodeContainer endDevices);
 
+  /**
+  * If enabled, NetworkServer's EnableStatsCollection-method is invoked during
+  * installing.
+  */
+  void EnableStatsCollection (void);
+
+  /**
+  * If enabled, NetworkServer's EnableTransactionMode-method is invoked during
+  * installing.
+  */
+  void EnableTransactionMode (void);
+
+  void SetSimulationTime (Time stopTime);
+
 private:
   void InstallComponents (Ptr<NetworkServer> netServer);
   Ptr<Application> InstallPriv (Ptr<Node> node);
@@ -72,6 +86,12 @@ private:
   NodeContainer m_endDevices;   //!< Set of endDevices to connect to this NS
 
   PointToPointHelper p2pHelper; //!< Helper to create PointToPoint links
+
+  bool m_collectStats;
+
+  bool m_transactionMode;
+
+  Time simulationTime;
 };
 
 } // namespace ns3

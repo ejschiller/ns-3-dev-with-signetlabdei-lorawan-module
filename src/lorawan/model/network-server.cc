@@ -30,6 +30,7 @@
 #include "ns3/lora-frame-header.h"
 #include "ns3/node-container.h"
 #include "ns3/end-device-lora-mac.h"
+#include "ns3/gateway-lora-phy.h"
 #include "ns3/mac-command.h"
 
 namespace ns3 {
@@ -56,7 +57,13 @@ NetworkServer::GetTypeId (void)
 NetworkServer::NetworkServer () :
   m_status (Create<NetworkStatus> ()),
   m_controller (Create<NetworkController> (m_status)),
-  m_scheduler (Create<NetworkScheduler> (m_status, m_controller))
+  m_scheduler (Create<NetworkScheduler> (m_status, m_controller)),
+  m_collectStats(false),
+  m_transactionMode(false),
+  m_receivedPackets(0),
+  m_packetLossInterference(0),
+  m_packetLossUnderSensitivity(0),
+  m_packetLossNoMoreReceivers(0)
 {
   NS_LOG_FUNCTION_NOARGS ();
 }
@@ -75,6 +82,7 @@ NetworkServer::StartApplication (void)
 void
 NetworkServer::StopApplication (void)
 {
+  if(m_collectStats) PrintStatistics ();
   NS_LOG_FUNCTION_NOARGS ();
 }
 
@@ -99,6 +107,34 @@ NetworkServer::AddGateway (Ptr<Node> gateway, Ptr<NetDevice> netDevice)
   Ptr<GatewayLoraMac> gwMac = gateway->GetDevice (0)->GetObject<LoraNetDevice> ()->
     GetMac ()->GetObject<GatewayLoraMac> ();
   NS_ASSERT (gwMac != 0);
+
+  // Get the PHY
+  Ptr<GatewayLoraPhy> gwPhy = gateway->GetDevice (0)->GetObject<LoraNetDevice> ()->
+    GetPhy ()->GetObject<GatewayLoraPhy> ();
+
+  if(m_collectStats) {
+
+    gwPhy->TraceConnectWithoutContext("ReceivedPacket",
+                                        MakeCallback
+                                        (&NetworkServer::RegisterPacketReception,
+                                        this));
+
+    gwPhy->TraceConnectWithoutContext("LostPacketBecauseInterference",
+                                        MakeCallback
+                                        (&NetworkServer::RegisterPacketLossInterference,
+                                        this));
+
+    gwPhy->TraceConnectWithoutContext("LostPacketBecauseUnderSensitivity",
+                                        MakeCallback
+                                        (&NetworkServer::RegisterPacketLossUnderSensitivity,
+                                        this));
+
+
+    gwPhy->TraceConnectWithoutContext("LostPacketBecauseNoMoreReceivers",
+                                        MakeCallback
+                                        (&NetworkServer::RegisterPacketLossNoMoreReceivers,
+                                        this));
+  }
 
   // Get the Address
   Address gatewayAddress = p2pNetDevice->GetAddress ();
@@ -145,6 +181,12 @@ NetworkServer::AddNode (Ptr<Node> node)
   Ptr<EndDeviceLoraMac> edLoraMac =
     loraNetDevice->GetMac ()->GetObject<EndDeviceLoraMac> ();
 
+  // Keep track of the total number of transmissions required to deliver this packet
+  /*edLoraMac->TraceConnectWithoutContext("RequiredTransmissions",
+                                        MakeCallback
+                                        (&NetworkServer::PrintFoo,
+                                         this));*/
+
   // Update the NetworkStatus about the existence of this node
   m_status->AddNode (edLoraMac);
 }
@@ -186,6 +228,56 @@ NetworkServer::GetNetworkStatus (void)
 {
   return m_status;
 }
+
+void
+NetworkServer::EnableTransactionMode (void)
+{
+  m_transactionMode = true;
+}
+
+void
+NetworkServer::EnableStatsCollection (void)
+{
+  m_collectStats = true;
+}
+
+void
+NetworkServer::RegisterPacketReception (Ptr<const Packet> packet, unsigned int index)
+{
+  ++m_receivedPackets;
+  //NS_LOG_UNCOND("Successfully received a packet. Packet count = " << m_receivedPackets);
+}
+
+void
+NetworkServer::RegisterPacketLossInterference (Ptr<const Packet> packet, unsigned int index)
+{
+  ++m_packetLossInterference;
+  //NS_LOG_UNCOND("Lost a packet due to interference. Interference packet loss count = " << m_packetLossInterference);
+}
+
+void
+NetworkServer::RegisterPacketLossUnderSensitivity (Ptr<const Packet> packet, unsigned int index)
+{
+  ++m_packetLossUnderSensitivity;
+  //NS_LOG_UNCOND("Lost a packet due to reception under sensitivity. Under sensitivity packet loss count = " << m_packetLossUnderSensitivity);
+}
+
+void
+NetworkServer::RegisterPacketLossNoMoreReceivers (Ptr<const Packet> packet, unsigned int index)
+{
+  ++m_packetLossNoMoreReceivers;
+  //NS_LOG_UNCOND("Lost a packet because no more receivers were available. No more receivers packet loss count = " << m_packetLossNoMoreReceivers);
+}
+
+void
+NetworkServer::PrintStatistics (void)
+{
+  NS_ASSERT(m_collectStats);
+  NS_LOG_UNCOND("Simulation statistics:");
+  NS_LOG_UNCOND("Matrix: [ # of successfully received packets || # of packets lost due to interference | # of packets lost due to reception under sensitivity | # of packets lost because no more receivers ]");
+  NS_LOG_UNCOND("[ " << m_receivedPackets << " || " << m_packetLossInterference << " | " << m_packetLossUnderSensitivity << " | " << m_packetLossNoMoreReceivers << " ]");
+}
+
 
 }
 }

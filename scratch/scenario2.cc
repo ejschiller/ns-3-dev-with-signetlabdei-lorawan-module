@@ -28,9 +28,9 @@ using namespace lorawan;
 NS_LOG_COMPONENT_DEFINE ("Scenario2");
 
 // Network settings
-int nDevices = 40;
-int nGateways = 1;
-double simulationTime = 1000;
+int nDevices = 50;
+int nGateways = 5;
+double simulationTime = 6000;
 int appPeriodSeconds = 60;
 int packetSize = 32;
 
@@ -60,11 +60,11 @@ int main (int argc, char *argv[])
   //LogComponentEnable("GatewayLoraPhy", LOG_LEVEL_ALL);
   // LogComponentEnable("LoraInterferenceHelper", LOG_LEVEL_ALL);
   // LogComponentEnable("LoraMac", LOG_LEVEL_ALL);
-  LogComponentEnable("EndDeviceLoraMac", LOG_LEVEL_ALL);
+  //LogComponentEnable("EndDeviceLoraMac", LOG_LEVEL_ALL);
   //LogComponentEnable("GatewayLoraMac", LOG_LEVEL_ALL);
   // LogComponentEnable("LogicalLoraChannelHelper", LOG_LEVEL_ALL);
   // LogComponentEnable("LogicalLoraChannel", LOG_LEVEL_ALL);
-   LogComponentEnable("LoraHelper", LOG_LEVEL_ALL);
+  //LogComponentEnable("LoraHelper", LOG_LEVEL_ALL);
   // LogComponentEnable("LoraPhyHelper", LOG_LEVEL_ALL);
   // LogComponentEnable("LoraMacHelper", LOG_LEVEL_ALL);
   //LogComponentEnable("PeriodicSenderHelper", LOG_LEVEL_ALL);
@@ -77,6 +77,7 @@ int main (int argc, char *argv[])
   //LogComponentEnable("LoraPacketTracker", LOG_LEVEL_ALL);
   //LogComponentEnable ("MobilityHelper", LOG_LEVEL_ALL);
   LogComponentEnable ("NetworkServerHelper", LOG_LEVEL_ALL);
+  //LogComponentEnable ("NetworkServer", LOG_LEVEL_ALL);
   LogComponentEnableAll (LOG_PREFIX_FUNC);
   LogComponentEnableAll (LOG_PREFIX_NODE);
   LogComponentEnableAll (LOG_PREFIX_TIME);
@@ -256,7 +257,7 @@ int main (int argc, char *argv[])
 
   // Create the LoraHelper
   LoraHelper helper = LoraHelper ();
-  helper.EnablePacketTracking ("performance"); // Output filename
+  //helper.EnablePacketTracking ("performance"); // Output filename
   //helper.EnableSimulationTimePrinting ();
 
   /************************
@@ -337,6 +338,9 @@ int main (int argc, char *argv[])
 
    // Install the SimpleNetworkServer application on the network server
    NetworkServerHelper networkServerHelper;
+   networkServerHelper.EnableStatsCollection ();
+   //networkServerHelper.EnableTransactionMode ();
+   networkServerHelper.SetSimulationTime (Seconds (simulationTime));
    networkServerHelper.SetGateways (gateways);
    networkServerHelper.SetEndDevices (endDevices);
    networkServerHelper.Install (networkServers);
@@ -368,8 +372,8 @@ int main (int argc, char *argv[])
   ///////////////////////////
   // Print results to file //
   ///////////////////////////
-  NS_LOG_INFO ("Computing performance metrics...");
-  helper.PrintPerformance (Seconds(0), Seconds (simulationTime));
+  //NS_LOG_INFO ("Computing performance metrics...");
+  //helper.PrintPerformance (Seconds(0), Seconds (simulationTime));
 
   return 0;
 }

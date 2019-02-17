@@ -100,12 +100,58 @@ public:
 
   Ptr<NetworkStatus> GetNetworkStatus (void);
 
+  /**
+  * If enabled, several trace sources from LoraMAC & -PHY layers are connected
+  * to record statistics regarding packet lifetime.
+  */
+  void EnableStatsCollection (void);
+
+  /**
+  * If enabled, arriving packets' transactional metadata will be recorded.
+  */
+  void EnableTransactionMode (void);
+
+  /**
+  * Register the successful arrival of some packet. If m_transactionMode is true,
+  * packet metadata (header) is analyzed for recording transactional statistics.
+  */
+  void RegisterPacketReception (Ptr<const Packet> packet, unsigned int index);
+
+  /**
+  * Register a packet loss due to interference.
+  */
+  void RegisterPacketLossInterference (Ptr<const Packet> packet, unsigned int index);
+
+  /**
+  * Register a packet loss due to reception under sensitivity.
+  */
+  void RegisterPacketLossUnderSensitivity (Ptr<const Packet> packet, unsigned int index);
+
+  /**
+  * Register a packet loss due to no more receivers available.
+  */
+  void RegisterPacketLossNoMoreReceivers (Ptr<const Packet> packet, unsigned int index);
+
+  /**
+  * Print statistics at the end of the simulation. Requires m_collectStats to be true.
+  */
+  void PrintStatistics (void);
+
 protected:
   Ptr<NetworkStatus> m_status;
   Ptr<NetworkController> m_controller;
   Ptr<NetworkScheduler> m_scheduler;
 
   TracedCallback<Ptr<const Packet> > m_receivedPacket;
+
+private:
+  bool m_collectStats;
+  bool m_transactionMode;
+  uint32_t m_receivedPackets;
+  uint32_t m_packetLossInterference;
+  uint32_t m_packetLossUnderSensitivity;
+  uint32_t m_packetLossNoMoreReceivers;
+
 };
 
 } /* namespace ns3 */
