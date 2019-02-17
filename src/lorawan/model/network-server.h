@@ -36,6 +36,7 @@
 #include "ns3/node-container.h"
 #include "ns3/log.h"
 #include "ns3/end-device-lora-mac.h"
+#include <vector>
 
 namespace ns3 {
 namespace lorawan {
@@ -133,6 +134,16 @@ public:
   void RegisterPacketLossNoMoreReceivers (Ptr<const Packet> packet, unsigned int index);
 
   /**
+  * Register a packet loss due to GW was transmitting during packet arrival.
+  */
+  void RegisterPacketLossBecauseTransmitting (Ptr<const Packet> packet, unsigned int index);
+
+  /**
+  * Register the total number of transmissions required to deliver a certain packet.
+  */
+  void RegisterRequiredTransmissions (unsigned char ch_attempts, bool flag, Time time, Ptr<Packet> packet);
+
+  /**
   * Print statistics at the end of the simulation. Requires m_collectStats to be true.
   */
   void PrintStatistics (void);
@@ -151,7 +162,8 @@ private:
   uint32_t m_packetLossInterference;
   uint32_t m_packetLossUnderSensitivity;
   uint32_t m_packetLossNoMoreReceivers;
-
+  uint32_t m_packetLossBecauseTransmitting;
+  std::vector<int> m_requiredTransmissions;
 };
 
 } /* namespace ns3 */

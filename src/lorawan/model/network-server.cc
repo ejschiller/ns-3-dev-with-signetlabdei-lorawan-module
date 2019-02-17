@@ -63,7 +63,8 @@ NetworkServer::NetworkServer () :
   m_receivedPackets(0),
   m_packetLossInterference(0),
   m_packetLossUnderSensitivity(0),
-  m_packetLossNoMoreReceivers(0)
+  m_packetLossNoMoreReceivers(0),
+  m_packetLossBecauseTransmitting(0)
 {
   NS_LOG_FUNCTION_NOARGS ();
 }
@@ -129,10 +130,14 @@ NetworkServer::AddGateway (Ptr<Node> gateway, Ptr<NetDevice> netDevice)
                                         (&NetworkServer::RegisterPacketLossUnderSensitivity,
                                         this));
 
-
     gwPhy->TraceConnectWithoutContext("LostPacketBecauseNoMoreReceivers",
                                         MakeCallback
                                         (&NetworkServer::RegisterPacketLossNoMoreReceivers,
+                                        this));
+
+    gwPhy->TraceConnectWithoutContext("NoReceptionBecauseTransmitting",
+                                        MakeCallback
+                                        (&NetworkServer::RegisterPacketLossBecauseTransmitting,
                                         this));
   }
 
@@ -182,10 +187,10 @@ NetworkServer::AddNode (Ptr<Node> node)
     loraNetDevice->GetMac ()->GetObject<EndDeviceLoraMac> ();
 
   // Keep track of the total number of transmissions required to deliver this packet
-  /*edLoraMac->TraceConnectWithoutContext("RequiredTransmissions",
+  edLoraMac->TraceConnectWithoutContext("RequiredTransmissions",
                                         MakeCallback
-                                        (&NetworkServer::PrintFoo,
-                                         this));*/
+                                        (&NetworkServer::RegisterRequiredTransmissions,
+                                        this));
 
   // Update the NetworkStatus about the existence of this node
   m_status->AddNode (edLoraMac);
@@ -239,6 +244,11 @@ void
 NetworkServer::EnableStatsCollection (void)
 {
   m_collectStats = true;
+  // initializing the m_requiredTransmissions vector
+  for (int i = 0; i<8; i++)
+  {
+    m_requiredTransmissions.push_back (0);
+  }
 }
 
 void
@@ -270,12 +280,43 @@ NetworkServer::RegisterPacketLossNoMoreReceivers (Ptr<const Packet> packet, unsi
 }
 
 void
+NetworkServer::RegisterPacketLossBecauseTransmitting (Ptr<const Packet> packet, unsigned int index)
+{
+  ++m_packetLossBecauseTransmitting;
+  //NS_LOG_UNCOND("Lost a packet because GW was transmitting during packet arrival. GW Tx packet loss count = " << m_packetLossBecauseTransmitting);
+
+}
+
+void
+NetworkServer::RegisterRequiredTransmissions (unsigned char ch_attempts, bool flag, Time time, Ptr<Packet> packet)
+{
+  int attempts = (int) ch_attempts;
+  NS_ASSERT (attempts <= 8);
+  m_requiredTransmissions[attempts-1] = m_requiredTransmissions[attempts-1] + 1;
+  //NS_LOG_UNCOND ("Total number of transmissions required to deliver this packet: " << (int) attempts);
+}
+
+
+void
 NetworkServer::PrintStatistics (void)
 {
   NS_ASSERT(m_collectStats);
   NS_LOG_UNCOND("Simulation statistics:");
-  NS_LOG_UNCOND("Matrix: [ # of successfully received packets || # of packets lost due to interference | # of packets lost due to reception under sensitivity | # of packets lost because no more receivers ]");
-  NS_LOG_UNCOND("[ " << m_receivedPackets << " || " << m_packetLossInterference << " | " << m_packetLossUnderSensitivity << " | " << m_packetLossNoMoreReceivers << " ]");
+  NS_LOG_UNCOND("Matrix 1: [ # of successfully received packets ||" <<
+                " # of packets lost due to interference |" <<
+                " # of packets lost due to reception under sensitivity |" <<
+                " # of packets lost because no more receivers |"<<
+                " # of packets lost because GW was transmitting during packet arrival ]");
+  NS_LOG_UNCOND("[ " << m_receivedPackets << " || " << m_packetLossInterference <<
+                " | " << m_packetLossUnderSensitivity << " | " <<
+                 m_packetLossNoMoreReceivers << " | " <<
+                  m_packetLossBecauseTransmitting << " ]");
+  NS_LOG_UNCOND("Matrix 2, # of transmissions required to deliver packets successfully:" <<
+                " [ 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 ]");
+  NS_LOG_UNCOND("[ " << m_requiredTransmissions[0] << " | " << m_requiredTransmissions[1] <<
+                " | " << m_requiredTransmissions[2] << " | " << m_requiredTransmissions[3] <<
+                " | " << m_requiredTransmissions[4] << " | " << m_requiredTransmissions[5] <<
+                " | " << m_requiredTransmissions[6] << " | " << m_requiredTransmissions[7] << " ] ");
 }
 
 
