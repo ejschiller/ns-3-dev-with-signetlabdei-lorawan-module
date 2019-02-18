@@ -66,6 +66,11 @@ NetworkServer::NetworkServer () :
   m_packetLossNoMoreReceivers(0),
   m_packetLossBecauseTransmitting(0)
 {
+  // initializing the m_requiredTransmissions vector
+  for (int i = 0; i<8; i++)
+  {
+    m_requiredTransmissions.push_back (0);
+  }
   NS_LOG_FUNCTION_NOARGS ();
 }
 
@@ -244,11 +249,6 @@ void
 NetworkServer::EnableStatsCollection (void)
 {
   m_collectStats = true;
-  // initializing the m_requiredTransmissions vector
-  for (int i = 0; i<8; i++)
-  {
-    m_requiredTransmissions.push_back (0);
-  }
 }
 
 void
