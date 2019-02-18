@@ -292,8 +292,12 @@ NetworkServer::RegisterRequiredTransmissions (unsigned char ch_attempts, bool fl
 {
   int attempts = (int) ch_attempts;
   NS_ASSERT (attempts <= 8);
-  m_requiredTransmissions[attempts-1] = m_requiredTransmissions[attempts-1] + 1;
-  //NS_LOG_UNCOND ("Total number of transmissions required to deliver this packet: " << (int) attempts);
+  if (attempts > 0)
+  {
+    m_requiredTransmissions[attempts-1] = m_requiredTransmissions[attempts-1] + 1;
+    //NS_LOG_UNCOND ("Total number of transmissions required to deliver this packet: " << (int) attempts);
+  }
+
 }
 
 

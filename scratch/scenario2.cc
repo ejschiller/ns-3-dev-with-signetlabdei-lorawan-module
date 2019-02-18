@@ -34,9 +34,6 @@ double simulationTime = 6000;
 int appPeriodSeconds = 60;
 int packetSize = 32;
 
-// Output control
-bool print = true;
-
 int main (int argc, char *argv[])
 {
 
@@ -47,9 +44,7 @@ int main (int argc, char *argv[])
   cmd.AddValue ("simulationTime",
                 "The time for which to simulate",
                 simulationTime);
-  cmd.AddValue ("print",
-                "Whether or not to print various informations",
-                print);
+
   cmd.Parse (argc, argv);
 
   // Set up logging
