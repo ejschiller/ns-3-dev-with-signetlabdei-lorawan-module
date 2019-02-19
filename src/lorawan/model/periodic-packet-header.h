@@ -1,7 +1,7 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 
-#ifndef TRANSACTIONAL_PACKET_HEADER_H
-#define TRANSACTIONAL_PACKET_HEADER_H
+#ifndef PERIODIC_PACKET_HEADER_H
+#define PERIODIC_PACKET_HEADER_H
 
 #include "ns3/ptr.h"
 #include "ns3/packet.h"
@@ -11,12 +11,12 @@
 namespace ns3 {
 namespace lorawan {
 
-class TransactionalPacketHeader : public Header
+class PeriodicPacketHeader : public Header
 {
 public:
 
-  TransactionalPacketHeader ();
-  virtual ~TransactionalPacketHeader ();
+  PeriodicPacketHeader ();
+  virtual ~PeriodicPacketHeader ();
 
   /**
    * Set the node UID.
@@ -29,18 +29,6 @@ public:
    * \return The node UID.
    */
   uint32_t GetNodeUid (void) const;
-
-  /**
-   * Set the transaction ID.
-   * \param data The transaction ID.
-   */
-  void SetTransactionId (uint16_t id);
-
-  /**
-   * Get the transaction ID.
-   * \return The transaction ID.
-   */
-  uint16_t GetTransactionId (void) const;
 
   /**
    * Set the packet ID.
@@ -63,7 +51,6 @@ public:
 
 private:
   uint32_t node_uid;
-  uint16_t transaction_id;
   uint16_t packet_id;
 
 };

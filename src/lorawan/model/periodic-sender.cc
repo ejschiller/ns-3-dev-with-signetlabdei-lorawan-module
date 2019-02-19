@@ -24,6 +24,7 @@
 #include "ns3/double.h"
 #include "ns3/string.h"
 #include "ns3/lora-net-device.h"
+#include "ns3/periodic-packet-header.h"
 
 namespace ns3 {
 namespace lorawan {
@@ -55,6 +56,7 @@ PeriodicSender::PeriodicSender ()
   : m_interval (Seconds (10)),
   m_initialDelay (Seconds (1)),
   m_basePktSize (10),
+  packet_count(0),
   m_pktSizeRV (0)
 
 {
@@ -102,23 +104,53 @@ PeriodicSender::SetPacketSize (uint8_t size)
 }
 
 
+uint16_t
+PeriodicSender::GetPacketCount (void) const {
+  return packet_count;
+}
+
+
+void
+PeriodicSender::SetPacketCount (uint16_t count) {
+  packet_count = count;
+}
+
+
 void
 PeriodicSender::SendPacket (void)
 {
+  // If this is the first packet transmission, save the nodeUID for later use
+  if(packet_count == 0) {
+    nodeUID = m_mac->GetDevice ()->GetNode ()->GetId ();
+  }
+
   NS_LOG_FUNCTION (this);
 
-  // Create and send a new packet
   Ptr<Packet> packet;
-  if (m_pktSizeRV)
-    {
-      int randomsize = m_pktSizeRV->GetInteger ();
-      packet = Create<Packet> (m_basePktSize + randomsize);
-    }
-  else
-    {
-      packet = Create<Packet> (m_basePktSize);
-    }
+
+  // Preparing the Header to be put into the packet's payload
+  PeriodicPacketHeader periodicHeader;
+  periodicHeader.SetNodeUid(nodeUID);
+  periodicHeader.SetPacketId(packet_count);
+
+  packet = Create<Packet> ();
+  packet->AddHeader (periodicHeader);
+
+  // Getting the packet's current size in B
+  uint32_t packetSize = packet->GetSize ();
+
+  // Filling the packet payload up with zeroes until the specified size.
+  packet->AddPaddingAtEnd (m_basePktSize - packetSize);
+
+  /*PeriodicPacketHeader testHeaderReceive;
+  packet->RemoveHeader (testHeaderReceive);
+
+  NS_LOG_UNCOND("testHeaderReceive->GetNodeUid ()  = " << testHeaderReceive.GetNodeUid ());
+  NS_LOG_UNCOND("testHeaderReceive->GetPacketId ()  = " << testHeaderReceive.GetPacketId ());*/
+
   m_mac->Send (packet);
+
+  ++packet_count;
 
   // Schedule the next SendPacket event
   m_sendEvent = Simulator::Schedule (m_interval, &PeriodicSender::SendPacket,

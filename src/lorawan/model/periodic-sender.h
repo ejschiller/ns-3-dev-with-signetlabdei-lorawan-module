@@ -64,6 +64,10 @@ public:
    */
   void SetPacketSizeRandomVariable (Ptr <RandomVariableStream> rv);
 
+  uint16_t GetPacketCount (void) const;
+
+  void SetPacketCount (uint16_t count);
+
   /**
    * Send a packet using the LoraNetDevice's Send method
    */
@@ -101,10 +105,19 @@ private:
   Ptr<LoraMac> m_mac;
 
   /**
+  *  The node's UID retrieved via m_mac->GetDevice ()->GetNode ()->GetId ()
+  */
+  uint32_t nodeUID;
+
+  /**
    * The packet size.
    */
   uint8_t m_basePktSize;
 
+  /**
+   * The packets already sent in the current transaction
+   */
+  uint16_t packet_count;
 
   /**
    * The random variable that adds bytes to the packet size

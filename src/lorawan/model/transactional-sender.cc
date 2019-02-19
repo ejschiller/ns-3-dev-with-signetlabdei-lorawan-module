@@ -175,7 +175,7 @@ TransactionalSender::SendPacket (void)
 {
   // If this is the first packet transmission, save the nodeUID for later use
   if(transaction_count == 0 && packet_count == 0) {
-      nodeUID = m_mac->GetDevice ()->GetNode ()->GetId ();
+    nodeUID = m_mac->GetDevice ()->GetNode ()->GetId ();
   }
 
   NS_LOG_FUNCTION (this);
@@ -183,7 +183,7 @@ TransactionalSender::SendPacket (void)
 
   Ptr<Packet> packet;
 
-  // Preparing the Header to be put on top of the packet's payload
+  // Preparing the Header to be put into the packet's payload
   TransactionalPacketHeader transactionalHeader;
   transactionalHeader.SetNodeUid(nodeUID);
   transactionalHeader.SetTransactionId(transaction_count);

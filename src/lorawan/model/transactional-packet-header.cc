@@ -9,9 +9,8 @@ namespace lorawan {
 
 TransactionalPacketHeader::TransactionalPacketHeader ()
 {
-  // we must provide a public default constructor,
-  // implicit or explicit, but never private.
 }
+
 TransactionalPacketHeader::~TransactionalPacketHeader ()
 {
 }
@@ -25,6 +24,7 @@ TransactionalPacketHeader::GetTypeId (void)
   ;
   return tid;
 }
+
 TypeId
 TransactionalPacketHeader::GetInstanceTypeId (void) const
 {
@@ -34,38 +34,32 @@ TransactionalPacketHeader::GetInstanceTypeId (void) const
 void
 TransactionalPacketHeader::Print (std::ostream &os) const
 {
-  // This method is invoked by the packet printing
-  // routines to print the content of my header.
-  //os << "data=" << m_data << std::endl;
   os << "packet_id=" << packet_id;
   os << "transaction_id=" << transaction_id;
 }
+
 uint32_t
 TransactionalPacketHeader::GetSerializedSize (void) const
 {
-  // we reserve 8 bytes for our header.
   return 8;
 }
+
 void
 TransactionalPacketHeader::Serialize (Buffer::Iterator start) const
 {
-  // we can serialize two bytes at the start of the buffer.
-  // we write them in network byte order.
   start.WriteHtonU32 (node_uid);
   start.WriteHtonU16 (transaction_id);
   start.WriteHtonU16 (packet_id);
 }
+
 uint32_t
 TransactionalPacketHeader::Deserialize (Buffer::Iterator start)
 {
-  // we can deserialize two bytes from the start of the buffer.
-  // we read them in network byte order and store them
-  // in host byte order.
   node_uid =        start.ReadNtohU32 ();
   transaction_id =  start.ReadNtohU16 ();
   packet_id =       start.ReadNtohU16 ();
 
-  // we return the number of bytes effectively read.
+  // return the number of bytes effectively read.
   return 8;
 }
 

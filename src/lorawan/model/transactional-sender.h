@@ -74,8 +74,6 @@ public:
 
   void SetTransactionCount (uint16_t count);
 
-  void IncrementPacketCount ();
-
   /**
    * Send a packet using the LoraNetDevice's Send method
    */

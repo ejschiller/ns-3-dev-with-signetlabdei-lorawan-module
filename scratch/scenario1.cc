@@ -257,7 +257,7 @@
    // Install the SimpleNetworkServer application on the network server
    NetworkServerHelper networkServerHelper;
    networkServerHelper.EnableStatsCollection ();
-   networkServerHelper.EnableTransactionMode ();
+   //networkServerHelper.EnableTransactionMode ();
    networkServerHelper.SetSimulationTime (Seconds (simulationTime));
    networkServerHelper.SetGateways (gateways);
    networkServerHelper.SetEndDevices (endDevices);
