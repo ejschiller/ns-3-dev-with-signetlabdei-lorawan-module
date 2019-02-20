@@ -33,7 +33,8 @@ NS_LOG_COMPONENT_DEFINE ("NetworkServerHelper");
 
 NetworkServerHelper::NetworkServerHelper () :
   m_collectStats(false),
-  m_transactionMode(false)
+  m_transactionMode(false),
+  m_numberOfPacketsPerTransaction(0)
 {
   m_factory.SetTypeId ("ns3::NetworkServer");
   p2pHelper.SetDeviceAttribute ("DataRate", StringValue ("5Mbps"));
@@ -60,6 +61,12 @@ void
 NetworkServerHelper::SetEndDevices (NodeContainer endDevices)
 {
   m_endDevices = endDevices;
+}
+
+void
+NetworkServerHelper::SetNumberOfPacketsPerTransaction (int packets)
+{
+  m_numberOfPacketsPerTransaction = packets;
 }
 
 void
@@ -106,7 +113,11 @@ NetworkServerHelper::InstallPriv (Ptr<Node> node)
   Ptr<NetworkServer> app = m_factory.Create<NetworkServer> ();
 
   if(m_collectStats) app->EnableStatsCollection ();
-  if(m_transactionMode) app->EnableTransactionMode ();
+  if(m_transactionMode)
+  {
+    app->EnableTransactionMode ();
+    app->SetNumberOfPacketsPerTransaction(m_numberOfPacketsPerTransaction);
+  }
 
   app->SetStopTime (simulationTime);
 

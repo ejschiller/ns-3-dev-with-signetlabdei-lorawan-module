@@ -229,16 +229,6 @@ TransactionalSender::SendPacket (void)
     m_sendEvent = Simulator::Schedule (interTransactionDelay, &TransactionalSender::SendPacket,
                                      this);
 
-  } else if (packet_count == 0) {
-      // Filling the packet payload up with zeroes until the specified size.
-      // For some unknown reason, the packet size of the first packet of a transaction is always 9 B bigger...
-      packet->AddPaddingAtEnd (dataPktSize - packetSize - 9);
-      m_mac->Send (packet);
-      NS_LOG_DEBUG ("Sent a data packet of size " << packet->GetSize () << " B, packet count: " << packet_count);
-      ++packet_count;
-      m_sendEvent = Simulator::Schedule (intraTransactionDelay, &TransactionalSender::SendPacket,
-                                         this);
-
   } else {
     // Filling the packet payload up with zeroes until the specified size.
     packet->AddPaddingAtEnd (dataPktSize - packetSize);

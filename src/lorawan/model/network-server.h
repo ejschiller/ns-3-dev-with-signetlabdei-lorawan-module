@@ -115,6 +115,12 @@ public:
   void EnableTransactionMode (void);
 
   /**
+  * Set the number of expected packets per transaction. This number includes the
+  * signature packets transmitted at the end of a transaction.
+  */
+  void SetNumberOfPacketsPerTransaction (int packets);
+
+  /**
   * Register the successful arrival of some packet. If m_transactionMode is true,
   * packet metadata (header) is analyzed for recording transactional statistics.
   */
@@ -151,6 +157,11 @@ public:
   void RegisterSuccessfulTransmission (Ptr<Packet> packet);
 
   /**
+  * Register a successful transmission of a packet belonging to some transaction.
+  */
+  void RegisterTransactionalPacket (Ptr<Packet> packet);
+
+  /**
   * Print statistics at the end of the simulation. Requires m_collectStats to be true.
   */
   void PrintStatistics (void);
@@ -170,8 +181,10 @@ private:
   uint32_t m_packetLossUnderSensitivity;
   uint32_t m_packetLossNoMoreReceivers;
   uint32_t m_packetLossBecauseTransmitting;
+  int m_numberOfPacketsPerTransaction;
   std::vector<int> m_requiredTransmissions;
   std::map<int, std::set<int>> m_successfulTransmissions;
+  std::map<int, std::map<int, std::set<int>>> m_transactionalPackets;
 };
 
 } /* namespace ns3 */

@@ -36,6 +36,7 @@
  int intraTransactionDelaySeconds = 10;
  int interTransactionDelayHours = 2;
  int packetsPerTransaction = 10;
+ int signaturePacketsPerTransaction = 2;
 
 
  int main (int argc, char *argv[])
@@ -66,7 +67,7 @@
    // LogComponentEnable("LoraPhyHelper", LOG_LEVEL_ALL);
    // LogComponentEnable("LoraMacHelper", LOG_LEVEL_ALL);
    //LogComponentEnable("TransactionalSenderHelper", LOG_LEVEL_ALL);
-   LogComponentEnable("TransactionalSender", LOG_LEVEL_DEBUG);
+   //LogComponentEnable("TransactionalSender", LOG_LEVEL_DEBUG);
    // LogComponentEnable("LoraMacHeader", LOG_LEVEL_ALL);
    // LogComponentEnable("LoraFrameHeader", LOG_LEVEL_ALL);
    // LogComponentEnable("NetworkScheduler", LOG_LEVEL_ALL);
@@ -266,6 +267,8 @@
    networkServerHelper.EnableStatsCollection ();
    networkServerHelper.EnableTransactionMode ();
    networkServerHelper.SetSimulationTime (Seconds (simulationTime));
+   networkServerHelper.SetNumberOfPacketsPerTransaction(packetsPerTransaction
+                                            + signaturePacketsPerTransaction);
    networkServerHelper.SetGateways (gateways);
    networkServerHelper.SetEndDevices (endDevices);
    networkServerHelper.Install (networkServers);

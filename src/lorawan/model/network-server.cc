@@ -66,7 +66,8 @@ NetworkServer::NetworkServer () :
   m_packetLossInterference(0),
   m_packetLossUnderSensitivity(0),
   m_packetLossNoMoreReceivers(0),
-  m_packetLossBecauseTransmitting(0)
+  m_packetLossBecauseTransmitting(0),
+  m_numberOfPacketsPerTransaction(0)
 {
 
   NS_LOG_FUNCTION_NOARGS ();
@@ -217,11 +218,11 @@ NetworkServer::Receive (Ptr<NetDevice> device, Ptr<const Packet> packet,
 
   if (m_collectStats && !m_transactionMode)
   {
-    RegisterSuccessfulTransmission(myPacket);
+    RegisterSuccessfulTransmission (myPacket);
   }
   else if (m_collectStats && m_transactionMode)
   {
-    // TODO: Implement a RegisterTransactionPacket-method & call it from here
+    RegisterTransactionalPacket (myPacket);
   }
 
   // Fire the trace source
@@ -269,6 +270,12 @@ NetworkServer::EnableStatsCollection (void)
   }
 
   m_collectStats = true;
+}
+
+void
+NetworkServer::SetNumberOfPacketsPerTransaction (int packets)
+{
+  m_numberOfPacketsPerTransaction = packets;
 }
 
 void
@@ -328,19 +335,57 @@ NetworkServer::RegisterSuccessfulTransmission (Ptr<Packet> packet)
   packet->RemoveHeader (periodicHdr);
 
   int nodeUidTmp = (int) periodicHdr.GetNodeUid ();
-  int packetId = (int) periodicHdr.GetPacketId ();
+  int packetIdTmp = (int) periodicHdr.GetPacketId ();
 
   auto search = m_successfulTransmissions.find (nodeUidTmp);
   if(search == m_successfulTransmissions.end ())
   {
     std::set<int> transmissionSet;
-    // Filling in the first transmission for this node
-    transmissionSet.insert (packetId);
+    // Registering the first transmission for this node
+    transmissionSet.insert (packetIdTmp);
     m_successfulTransmissions.insert (std::make_pair (nodeUidTmp, transmissionSet));
   }
   else
   {
-    search->second.insert (packetId);
+    search->second.insert (packetIdTmp);
+  }
+}
+
+void
+NetworkServer::RegisterTransactionalPacket (Ptr<Packet> packet)
+{
+  NS_ASSERT(m_transactionMode);
+  TransactionalPacketHeader transactionalHdr;
+  packet->RemoveHeader (transactionalHdr);
+
+  int nodeUidTmp = (int) transactionalHdr.GetNodeUid ();
+  int transactionIdTmp = (int) transactionalHdr.GetTransactionId ();
+  int packetIdTmp = (int) transactionalHdr.GetPacketId ();
+
+  auto search = m_transactionalPackets.find (nodeUidTmp);
+  if (search == m_transactionalPackets.end ())
+  {
+    std::map<int, std::set<int>> transactionMap;
+    // Registering the first transaction for this node;
+    std::set<int> transaction;
+    transaction.insert (packetIdTmp);
+    transactionMap.insert (std::make_pair (transactionIdTmp, transaction));
+    m_transactionalPackets.insert (std::make_pair (nodeUidTmp, transactionMap));
+  }
+  else
+  {
+    // Checking, if for this node the packet's transaction is already present
+    auto searchTransaction = search->second.find (transactionIdTmp);
+    if (searchTransaction == search->second.end ())
+    {
+      std::set<int> transaction;
+      transaction.insert (packetIdTmp);
+      search->second.insert (std::make_pair (transactionIdTmp, transaction));
+    }
+    else
+    {
+      searchTransaction->second.insert(packetIdTmp);
+    }
   }
 }
 
@@ -367,18 +412,38 @@ NetworkServer::PrintStatistics (void)
 
   if(m_transactionMode)
   {
-    /* TODO: implement analysis of transactions here */
+    NS_ASSERT(m_numberOfPacketsPerTransaction > 0);
+    // Computing the number of entirely received transactions (all packets + signature packets received)
+    int successfulTransactions = 0;
+    int incompleteTransactions = 0;
+    for (auto edIte = m_transactionalPackets.begin (); edIte != m_transactionalPackets.end (); ++edIte)
+    {
+      for (auto transIte = edIte->second.begin (); transIte != edIte->second.end (); ++transIte)
+      {
+        if (transIte->second.size () == (unsigned int) m_numberOfPacketsPerTransaction)
+        {
+          ++successfulTransactions;
+        }
+        else
+        {
+          ++incompleteTransactions;
+        }
+      }
+    }
+
+    NS_LOG_UNCOND("# of successful transactions: " << successfulTransactions);
+    NS_LOG_UNCOND("# of incomplete transactions: " << incompleteTransactions);
   }
   else
   {
     // Computing the number of individual successful packet transmissions
     int successfulTransmissions = 0;
-    for(auto ite = m_successfulTransmissions.begin (); ite != m_successfulTransmissions.end (); ++ite)
+    for (auto ite = m_successfulTransmissions.begin (); ite != m_successfulTransmissions.end (); ++ite)
     {
       successfulTransmissions += ite->second.size ();
     }
 
-    NS_LOG_UNCOND("Successful Transmissions: " << successfulTransmissions);
+    NS_LOG_UNCOND("# of successful transmissions: " << successfulTransmissions);
   }
 }
 

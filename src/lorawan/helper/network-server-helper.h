@@ -73,6 +73,12 @@ public:
   */
   void EnableTransactionMode (void);
 
+  /**
+  * Set the number of expected packets per transaction. This number includes the
+  * signature packets transmitted at the end of a transaction.
+  */
+  void SetNumberOfPacketsPerTransaction (int packets);
+
   void SetSimulationTime (Time stopTime);
 
 private:
@@ -90,6 +96,8 @@ private:
   bool m_collectStats;
 
   bool m_transactionMode;
+
+  int m_numberOfPacketsPerTransaction;
 
   Time simulationTime;
 };
