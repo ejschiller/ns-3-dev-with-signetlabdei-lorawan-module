@@ -25,6 +25,8 @@
 #include "ns3/packet.h"
 #include "ns3/lora-mac-header.h"
 #include "ns3/lora-frame-header.h"
+#include "ns3/periodic-packet-header.h"
+#include "ns3/transactional-packet-header.h"
 #include "ns3/lora-device-address.h"
 #include "ns3/network-status.h"
 #include "ns3/lora-frame-header.h"
@@ -66,11 +68,7 @@ NetworkServer::NetworkServer () :
   m_packetLossNoMoreReceivers(0),
   m_packetLossBecauseTransmitting(0)
 {
-  // initializing the m_requiredTransmissions vector
-  for (int i = 0; i<8; i++)
-  {
-    m_requiredTransmissions.push_back (0);
-  }
+
   NS_LOG_FUNCTION_NOARGS ();
 }
 
@@ -210,6 +208,22 @@ NetworkServer::Receive (Ptr<NetDevice> device, Ptr<const Packet> packet,
   // Create a copy of the packet
   Ptr<Packet> myPacket = packet->Copy ();
 
+  LoraMacHeader macHdr;
+  myPacket->RemoveHeader (macHdr);
+  LoraFrameHeader frameHdr;
+  myPacket->RemoveHeader (frameHdr);
+  LoraTag tag;
+  myPacket->RemovePacketTag (tag);
+
+  if (m_collectStats && !m_transactionMode)
+  {
+    RegisterSuccessfulTransmission(myPacket);
+  }
+  else if (m_collectStats && m_transactionMode)
+  {
+    // TODO: Implement a RegisterTransactionPacket-method & call it from here
+  }
+
   // Fire the trace source
   m_receivedPacket (packet);
 
@@ -248,6 +262,12 @@ NetworkServer::EnableTransactionMode (void)
 void
 NetworkServer::EnableStatsCollection (void)
 {
+  // initializing the m_requiredTransmissions vector
+  for (int i = 0; i<8; i++)
+  {
+    m_requiredTransmissions.push_back (0);
+  }
+
   m_collectStats = true;
 }
 
@@ -300,13 +320,36 @@ NetworkServer::RegisterRequiredTransmissions (unsigned char ch_attempts, bool fl
 
 }
 
+void
+NetworkServer::RegisterSuccessfulTransmission (Ptr<Packet> packet)
+{
+  NS_ASSERT(m_collectStats);
+  PeriodicPacketHeader periodicHdr;
+  packet->RemoveHeader (periodicHdr);
+
+  int nodeUidTmp = (int) periodicHdr.GetNodeUid ();
+  int packetId = (int) periodicHdr.GetPacketId ();
+
+  auto search = m_successfulTransmissions.find (nodeUidTmp);
+  if(search == m_successfulTransmissions.end ())
+  {
+    std::set<int> transmissionSet;
+    // Filling in the first transmission for this node
+    transmissionSet.insert (packetId);
+    m_successfulTransmissions.insert (std::make_pair (nodeUidTmp, transmissionSet));
+  }
+  else
+  {
+    search->second.insert (packetId);
+  }
+}
 
 void
 NetworkServer::PrintStatistics (void)
 {
   NS_ASSERT(m_collectStats);
   NS_LOG_UNCOND("Simulation statistics:");
-  NS_LOG_UNCOND("Matrix 1: [ # of successfully received packets ||" <<
+  NS_LOG_UNCOND("Matrix 1: [ # of successful packet receptions at gateways ||" <<
                 " # of packets lost due to interference |" <<
                 " # of packets lost due to reception under sensitivity |" <<
                 " # of packets lost because no more receivers |"<<
@@ -321,6 +364,22 @@ NetworkServer::PrintStatistics (void)
                 " | " << m_requiredTransmissions[2] << " | " << m_requiredTransmissions[3] <<
                 " | " << m_requiredTransmissions[4] << " | " << m_requiredTransmissions[5] <<
                 " | " << m_requiredTransmissions[6] << " | " << m_requiredTransmissions[7] << " ] ");
+
+  if(m_transactionMode)
+  {
+    /* TODO: implement analysis of transactions here */
+  }
+  else
+  {
+    // Computing the number of individual successful packet transmissions
+    int successfulTransmissions = 0;
+    for(auto ite = m_successfulTransmissions.begin (); ite != m_successfulTransmissions.end (); ++ite)
+    {
+      successfulTransmissions += ite->second.size ();
+    }
+
+    NS_LOG_UNCOND("Successful Transmissions: " << successfulTransmissions);
+  }
 }
 
 

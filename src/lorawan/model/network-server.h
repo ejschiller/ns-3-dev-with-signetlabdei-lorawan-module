@@ -37,6 +37,8 @@
 #include "ns3/log.h"
 #include "ns3/end-device-lora-mac.h"
 #include <vector>
+#include <map>
+#include <set>
 
 namespace ns3 {
 namespace lorawan {
@@ -144,6 +146,11 @@ public:
   void RegisterRequiredTransmissions (unsigned char ch_attempts, bool flag, Time time, Ptr<Packet> packet);
 
   /**
+  * Register a successful packet transmission in the m_successfulTransmissions map.
+  */
+  void RegisterSuccessfulTransmission (Ptr<Packet> packet);
+
+  /**
   * Print statistics at the end of the simulation. Requires m_collectStats to be true.
   */
   void PrintStatistics (void);
@@ -164,6 +171,7 @@ private:
   uint32_t m_packetLossNoMoreReceivers;
   uint32_t m_packetLossBecauseTransmitting;
   std::vector<int> m_requiredTransmissions;
+  std::map<int, std::set<int>> m_successfulTransmissions;
 };
 
 } /* namespace ns3 */
