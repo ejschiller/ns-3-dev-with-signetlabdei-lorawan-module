@@ -422,10 +422,16 @@ NetworkServer::PrintStatistics (void)
       {
         if (transIte->second.size () == (unsigned int) m_numberOfPacketsPerTransaction)
         {
+          NS_LOG_DEBUG("Successful transaction nr.: " << transIte->first <<
+           ", size: " << transIte->second.size () << ", node :" << edIte->first);
+
           ++successfulTransactions;
         }
         else
         {
+          NS_LOG_DEBUG("Failed transaction nr.: " << transIte->first <<
+           ", size: " << transIte->second.size () << ", node :" << edIte->first);
+
           ++incompleteTransactions;
         }
       }
