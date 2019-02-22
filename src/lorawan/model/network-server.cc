@@ -410,6 +410,8 @@ NetworkServer::PrintStatistics (void)
                 " | " << m_requiredTransmissions[4] << " | " << m_requiredTransmissions[5] <<
                 " | " << m_requiredTransmissions[6] << " | " << m_requiredTransmissions[7] << " ] ");
 
+  double conversion = (Hours(1).GetSeconds () / m_stopTime.GetSeconds ());
+
   if(m_transactionMode)
   {
     NS_ASSERT(m_numberOfPacketsPerTransaction > 0);
@@ -448,6 +450,8 @@ NetworkServer::PrintStatistics (void)
     NS_LOG_UNCOND("# of successful transactions: " << successfulTransactions);
     NS_LOG_UNCOND("# of incomplete transactions: " << incompleteTransactions);
     NS_LOG_UNCOND("Success rate: " << successRatePerc << "%");
+    NS_LOG_UNCOND("Throughput: " << successfulTransactions * conversion
+                    << " transactions per hour.");
   }
   else
   {
@@ -468,6 +472,9 @@ NetworkServer::PrintStatistics (void)
     NS_LOG_UNCOND("# of successful transmissions: " << successfulTransmissions);
     NS_LOG_UNCOND("# of unsuccessful transmissions: " << unsuccessfulTransmissions);
     NS_LOG_UNCOND("Success rate: " << successRatePerc << "%");
+    NS_LOG_UNCOND("Throughput: " << successfulTransmissions * conversion
+                    << " transmissions per hour.");
+
   }
 }
 
