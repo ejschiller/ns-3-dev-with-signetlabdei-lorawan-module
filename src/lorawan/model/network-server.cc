@@ -448,14 +448,20 @@ NetworkServer::PrintStatistics (void)
   }
   else
   {
-    // Computing the number of individual successful packet transmissions
+    // Computing the number of individual un-/successful packet transmissions
     int successfulTransmissions = 0;
+    int unsuccessfulTransmissions = 0;
     for (auto ite = m_successfulTransmissions.begin (); ite != m_successfulTransmissions.end (); ++ite)
     {
+      // successfulTransmissions += (size of set)
       successfulTransmissions += ite->second.size ();
+      // unsuccessfulTransmissions += (max value + 1) - (size of set)
+      unsuccessfulTransmissions += (*(std::prev(ite->second.end (), 1)) + 1
+                                                    - ite->second.size ());
     }
 
     NS_LOG_UNCOND("# of successful transmissions: " << successfulTransmissions);
+    NS_LOG_UNCOND("# of unsuccessful transmissions: " << unsuccessfulTransmissions);
   }
 }
 
