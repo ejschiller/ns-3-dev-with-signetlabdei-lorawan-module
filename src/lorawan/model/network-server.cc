@@ -443,8 +443,11 @@ NetworkServer::PrintStatistics (void)
       }
     }
 
+    double successRatePerc = 100 * (double) successfulTransactions
+                            / (successfulTransactions + incompleteTransactions);
     NS_LOG_UNCOND("# of successful transactions: " << successfulTransactions);
     NS_LOG_UNCOND("# of incomplete transactions: " << incompleteTransactions);
+    NS_LOG_UNCOND("Success rate: " << successRatePerc << "%");
   }
   else
   {
@@ -460,8 +463,11 @@ NetworkServer::PrintStatistics (void)
                                                     - ite->second.size ());
     }
 
+    double successRatePerc = 100 * (double) successfulTransmissions
+                            / (successfulTransmissions + unsuccessfulTransmissions);
     NS_LOG_UNCOND("# of successful transmissions: " << successfulTransmissions);
     NS_LOG_UNCOND("# of unsuccessful transmissions: " << unsuccessfulTransmissions);
+    NS_LOG_UNCOND("Success rate: " << successRatePerc << "%");
   }
 }
 
