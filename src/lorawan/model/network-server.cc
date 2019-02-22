@@ -288,6 +288,11 @@ NetworkServer::RegisterPacketReception (Ptr<const Packet> packet, unsigned int i
 void
 NetworkServer::RegisterPacketLossInterference (Ptr<const Packet> packet, unsigned int index)
 {
+  if(!m_transactionMode)
+  {
+    Ptr<Packet> myPacket = packet->Copy ();
+    RegisterUnsuccessfulTransmission (myPacket);
+  }
   ++m_packetLossInterference;
   //NS_LOG_UNCOND("Lost a packet due to interference. Interference packet loss count = " << m_packetLossInterference);
 }
@@ -295,6 +300,11 @@ NetworkServer::RegisterPacketLossInterference (Ptr<const Packet> packet, unsigne
 void
 NetworkServer::RegisterPacketLossUnderSensitivity (Ptr<const Packet> packet, unsigned int index)
 {
+  if(!m_transactionMode)
+  {
+    Ptr<Packet> myPacket = packet->Copy ();
+    RegisterUnsuccessfulTransmission (myPacket);
+  }
   ++m_packetLossUnderSensitivity;
   //NS_LOG_UNCOND("Lost a packet due to reception under sensitivity. Under sensitivity packet loss count = " << m_packetLossUnderSensitivity);
 }
@@ -302,6 +312,11 @@ NetworkServer::RegisterPacketLossUnderSensitivity (Ptr<const Packet> packet, uns
 void
 NetworkServer::RegisterPacketLossNoMoreReceivers (Ptr<const Packet> packet, unsigned int index)
 {
+  if(!m_transactionMode)
+  {
+    Ptr<Packet> myPacket = packet->Copy ();
+    RegisterUnsuccessfulTransmission (myPacket);
+  }
   ++m_packetLossNoMoreReceivers;
   //NS_LOG_UNCOND("Lost a packet because no more receivers were available. No more receivers packet loss count = " << m_packetLossNoMoreReceivers);
 }
@@ -309,9 +324,13 @@ NetworkServer::RegisterPacketLossNoMoreReceivers (Ptr<const Packet> packet, unsi
 void
 NetworkServer::RegisterPacketLossBecauseTransmitting (Ptr<const Packet> packet, unsigned int index)
 {
+  if(!m_transactionMode)
+  {
+    Ptr<Packet> myPacket = packet->Copy ();
+    RegisterUnsuccessfulTransmission (myPacket);
+  }
   ++m_packetLossBecauseTransmitting;
   //NS_LOG_UNCOND("Lost a packet because GW was transmitting during packet arrival. GW Tx packet loss count = " << m_packetLossBecauseTransmitting);
-
 }
 
 void
@@ -341,13 +360,44 @@ NetworkServer::RegisterSuccessfulTransmission (Ptr<Packet> packet)
   if(search == m_successfulTransmissions.end ())
   {
     std::set<int> transmissionSet;
-    // Registering the first transmission for this node
+    // Registering the first successful transmission for this node
     transmissionSet.insert (packetIdTmp);
     m_successfulTransmissions.insert (std::make_pair (nodeUidTmp, transmissionSet));
   }
   else
   {
     search->second.insert (packetIdTmp);
+  }
+}
+
+void
+NetworkServer::RegisterUnsuccessfulTransmission (Ptr<Packet> packet)
+{
+  NS_ASSERT(m_collectStats);
+  LoraFrameHeader loraFrameHeader;
+  LoraMacHeader loraMacHeader;
+  if(packet->GetSize () > (loraFrameHeader.GetSerializedSize () + loraMacHeader.GetSerializedSize ()))
+  {
+    PeriodicPacketHeader periodicHdr;
+    packet->RemoveHeader (loraMacHeader);
+    packet->RemoveHeader (loraFrameHeader);
+    packet->RemoveHeader (periodicHdr);
+
+    int nodeUidTmp = (int) periodicHdr.GetNodeUid ();
+    int packetIdTmp = (int) periodicHdr.GetPacketId ();
+
+    auto search = m_unsuccessfulTransmissions.find (nodeUidTmp);
+    if(search == m_unsuccessfulTransmissions.end ())
+    {
+      std::set<int> transmissionSet;
+      // Registering the first unsuccessful transmission for this node
+      transmissionSet.insert (packetIdTmp);
+      m_unsuccessfulTransmissions.insert (std::make_pair (nodeUidTmp, transmissionSet));
+    }
+    else
+    {
+      search->second.insert (packetIdTmp);
+    }
   }
 }
 

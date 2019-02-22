@@ -157,6 +157,11 @@ public:
   void RegisterSuccessfulTransmission (Ptr<Packet> packet);
 
   /**
+  * Register an unsuccessful packet transmission in the m_unsuccessfulTransmissions map.
+  */
+  void RegisterUnsuccessfulTransmission (Ptr<Packet> packet);
+
+  /**
   * Register a successful transmission of a packet belonging to some transaction.
   */
   void RegisterTransactionalPacket (Ptr<Packet> packet);
@@ -184,6 +189,7 @@ private:
   int m_numberOfPacketsPerTransaction;
   std::vector<int> m_requiredTransmissions;
   std::map<int, std::set<int>> m_successfulTransmissions;
+  std::map<int, std::set<int>> m_unsuccessfulTransmissions;
   std::map<int, std::map<int, std::set<int>>> m_transactionalPackets;
 };
 
