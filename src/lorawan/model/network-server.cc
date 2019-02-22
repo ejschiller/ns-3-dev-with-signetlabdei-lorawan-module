@@ -429,10 +429,16 @@ NetworkServer::PrintStatistics (void)
         }
         else
         {
-          NS_LOG_DEBUG("Failed transaction nr.: " << transIte->first <<
-           ", size: " << transIte->second.size () << ", node :" << edIte->first);
+          /* If the last transaction is incomplete, it will not count to the no.
+             of unsuccessful transactions, just because the simulation ended du-
+             ring an ongoing transaction. */
+          if (transIte != (std::prev(edIte->second.end (), 1)))
+          {
+            NS_LOG_DEBUG("Failed transaction nr.: " << transIte->first <<
+            ", size: " << transIte->second.size () << ", node :" << edIte->first);
 
-          ++incompleteTransactions;
+            ++incompleteTransactions;
+          }
         }
       }
     }
