@@ -508,13 +508,34 @@ NetworkServer::PrintStatistics (void)
     // Computing the number of individual un-/successful packet transmissions
     int successfulTransmissions = 0;
     int unsuccessfulTransmissions = 0;
+
     for (auto ite = m_successfulTransmissions.begin (); ite != m_successfulTransmissions.end (); ++ite)
     {
       // successfulTransmissions += (size of set)
       successfulTransmissions += ite->second.size ();
-      // unsuccessfulTransmissions += (max value + 1) - (size of set)
-      unsuccessfulTransmissions += (*(std::prev(ite->second.end (), 1)) + 1
-                                                    - ite->second.size ());
+
+      // search for the current end device in the m_unsuccessfulTransmissions map
+      auto search = m_unsuccessfulTransmissions.find (ite->first);
+      if(search != m_unsuccessfulTransmissions.end ())
+      {
+        // building a temp set of transmissions which did not reach any GW
+        std::set<int> actualMissing;
+        std::set_difference (search->second.begin (), search->second.end (),
+                             ite->second.begin (), ite->second.end (),
+                             std::inserter (actualMissing, actualMissing.begin ()));
+
+        // recording the number of globally unsuccessful transmissions for this ED
+        unsuccessfulTransmissions += actualMissing.size ();
+
+        // remove entry for this ED, such that only entries for EDs with only unsuccessful transmissions remain.
+        m_unsuccessfulTransmissions.erase (search);
+      }
+    }
+
+    // adding the unsuccessful transmissions for EDs, which did not have any successful transmissions
+    for (auto ite = m_unsuccessfulTransmissions.begin (); ite != m_unsuccessfulTransmissions.end (); ++ ite)
+    {
+      unsuccessfulTransmissions += ite->second.size ();
     }
 
     double successRatePerc = 100 * (double) successfulTransmissions

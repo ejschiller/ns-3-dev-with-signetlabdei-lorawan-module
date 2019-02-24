@@ -39,6 +39,7 @@
 #include <vector>
 #include <map>
 #include <set>
+#include <algorithm>
 
 namespace ns3 {
 namespace lorawan {
