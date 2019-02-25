@@ -30,8 +30,8 @@
  // Network settings
  int nDevices = 50;
  const int nGateways = 5;
- double simulationTime = 6000;
- int appPeriodSeconds = 60;
+ Time simulationTime = Seconds (6000);
+ Time interTransmissionDelay = Seconds (60);
  int packetSize = 32;
 
 
@@ -245,20 +245,18 @@
    *  Install applications on the end devices  *
    ********************************************/
 
-   Time appStopTime = Seconds (simulationTime);
    PeriodicSenderHelper appHelper = PeriodicSenderHelper ();
-   appHelper.SetPeriod (Seconds (appPeriodSeconds));
+   appHelper.SetPeriod (interTransmissionDelay);
    appHelper.SetPacketSize (packetSize);
    ApplicationContainer appContainer = appHelper.Install (endDevices);
    appContainer.Start (Seconds (0));
-   appContainer.Stop (appStopTime);
+   appContainer.Stop (simulationTime);
    NodeContainer networkServers;
    networkServers.Create (1);
    // Install the SimpleNetworkServer application on the network server
    NetworkServerHelper networkServerHelper;
    networkServerHelper.EnableStatsCollection ();
-   //networkServerHelper.EnableTransactionMode ();
-   networkServerHelper.SetSimulationTime (Seconds (simulationTime));
+   networkServerHelper.SetSimulationTime (simulationTime);
    networkServerHelper.SetGateways (gateways);
    networkServerHelper.SetEndDevices (endDevices);
    networkServerHelper.Install (networkServers);
@@ -270,7 +268,7 @@
     *  Simulation  *
     ****************/
 
-   Simulator::Stop (Seconds (simulationTime) + Hours (1));
+   Simulator::Stop (simulationTime + Hours (1));
 
    NS_LOG_INFO ("Running simulation...");
    Simulator::Run ();

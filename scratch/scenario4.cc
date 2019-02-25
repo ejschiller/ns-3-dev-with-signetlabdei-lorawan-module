@@ -28,13 +28,13 @@
  NS_LOG_COMPONENT_DEFINE ("Scenario4");
 
  // Network settings
- int nDevices = 50;
+ int nDevices = 20;
  const int nGateways = 5;
- double simulationTime = 6000;
+ Time simulationTime = Seconds (500);
  int dataPacketSize = 42;
  int partialSignaturePacketSize = 34;
- int intraTransactionDelaySeconds = 10;
- int interTransactionDelayHours = 2;
+ Time intraTransactionDelay = Seconds (10);
+ Time interTransactionDelay = intraTransactionDelay;
  int packetsPerTransaction = 10;
  int signaturePacketsPerTransaction = 2;
 
@@ -75,7 +75,7 @@
    // LogComponentEnable("NetworkController", LOG_LEVEL_ALL);
    //LogComponentEnable("LoraPacketTracker", LOG_LEVEL_ALL);
    //LogComponentEnable ("MobilityHelper", LOG_LEVEL_ALL);
-   LogComponentEnable ("NetworkServerHelper", LOG_LEVEL_ALL);
+   //LogComponentEnable ("NetworkServerHelper", LOG_LEVEL_ALL);
    //LogComponentEnable ("NetworkServer", LOG_LEVEL_ALL);
    LogComponentEnableAll (LOG_PREFIX_FUNC);
    LogComponentEnableAll (LOG_PREFIX_NODE);
@@ -102,12 +102,12 @@
 
    // x/y-coordinates according to running nodeExtractor.py on 2M transmissions
    std::vector<Vector> extractedPositions;
-   extractedPositions.push_back(Vector (9782.655684816418, 16407.83287118317, 0.0));
-   extractedPositions.push_back(Vector (761.9884992111474, 12798.042369708477, 0.0));
-   extractedPositions.push_back(Vector (6515.527137617231, 13605.91745874213, 0.0));
-   extractedPositions.push_back(Vector (7930.596178661217, 11784.030245990027, 0.0));
-   extractedPositions.push_back(Vector (9795.627437463845, 10606.133177199517, 0.0));
-   extractedPositions.push_back(Vector (2547.116770894616, 6258.487048110168, 0.0));
+   extractedPositions.push_back (Vector (9782.655684816418, 16407.83287118317, 0.0));
+   extractedPositions.push_back (Vector (761.9884992111474, 12798.042369708477, 0.0));
+   extractedPositions.push_back (Vector (6515.527137617231, 13605.91745874213, 0.0));
+   extractedPositions.push_back (Vector (7930.596178661217, 11784.030245990027, 0.0));
+   extractedPositions.push_back (Vector (9795.627437463845, 10606.133177199517, 0.0));
+   extractedPositions.push_back (Vector (2547.116770894616, 6258.487048110168, 0.0));
 
    // Add extracted end devices' geographic positions
    int countED = 0;
@@ -143,16 +143,16 @@
    // x/y-coordinates according to result of gatewayExtractor.py
    std::vector<Vector> gatewayPositions;
 
-   gatewayPositions.push_back(Vector (4122.352615268552, 16542.762861510157, 0.0));
-   gatewayPositions.push_back(Vector (14459.921123372857, 13703.479859293817, 0.0));
-   gatewayPositions.push_back(Vector (4516.319102031179, 4865.475907711138, 0.0));
-   gatewayPositions.push_back(Vector (14733.273650575778, 2959.646779379429, 0.0));
-   gatewayPositions.push_back(Vector (10476.50623490091, 10322.927904981654, 0.0));
+   gatewayPositions.push_back (Vector (4122.352615268552, 16542.762861510157, 0.0));
+   gatewayPositions.push_back (Vector (14459.921123372857, 13703.479859293817, 0.0));
+   gatewayPositions.push_back (Vector (4516.319102031179, 4865.475907711138, 0.0));
+   gatewayPositions.push_back (Vector (14733.273650575778, 2959.646779379429, 0.0));
+   gatewayPositions.push_back (Vector (10476.50623490091, 10322.927904981654, 0.0));
 
    Ptr<ListPositionAllocator> positionAllocGw = CreateObject<ListPositionAllocator> ();
 
    // checking the fixed number of 5 GWs
-   NS_ASSERT(nGateways == 5);
+   NS_ASSERT (nGateways == 5);
 
    for(auto iteGW = gatewayPositions.begin(); iteGW != gatewayPositions.end(); ++iteGW)
    {
@@ -231,7 +231,7 @@
    NodeContainer gateways;
    gateways.Create (nGateways);
 
-   mobilityGw.Install(gateways);
+   mobilityGw.Install (gateways);
 
    // Create a netdevice for each gateway
    phyHelper.SetDeviceType (LoraPhyHelper::GW);
@@ -249,25 +249,23 @@
    *  Install applications on the end devices  *
    ********************************************/
 
-   Time appStopTime = Seconds (simulationTime);
-
    TransactionalSenderHelper appHelper = TransactionalSenderHelper ();
-   appHelper.SetDataPacketSize(dataPacketSize);
-   appHelper.SetPartialSignaturePacketSize(partialSignaturePacketSize);
-   appHelper.SetIntraTransactionDelay(Seconds(intraTransactionDelaySeconds));
-   appHelper.SetInterTransactionDelay(Hours(interTransactionDelayHours));
-   appHelper.SetPacketsPerTransaction(packetsPerTransaction);
+   appHelper.SetDataPacketSize (dataPacketSize);
+   appHelper.SetPartialSignaturePacketSize (partialSignaturePacketSize);
+   appHelper.SetIntraTransactionDelay (intraTransactionDelay);
+   appHelper.SetInterTransactionDelay (interTransactionDelay);
+   appHelper.SetPacketsPerTransaction (packetsPerTransaction);
    ApplicationContainer appContainer = appHelper.Install (endDevices);
    appContainer.Start (Seconds (0));
-   appContainer.Stop (appStopTime);
+   appContainer.Stop (simulationTime);
    NodeContainer networkServers;
    networkServers.Create (1);
    // Install the SimpleNetworkServer application on the network server
    NetworkServerHelper networkServerHelper;
    networkServerHelper.EnableStatsCollection ();
    networkServerHelper.EnableTransactionMode ();
-   networkServerHelper.SetSimulationTime (Seconds (simulationTime));
-   networkServerHelper.SetNumberOfPacketsPerTransaction(packetsPerTransaction
+   networkServerHelper.SetSimulationTime (simulationTime);
+   networkServerHelper.SetNumberOfPacketsPerTransaction (packetsPerTransaction
                                             + signaturePacketsPerTransaction);
    networkServerHelper.SetGateways (gateways);
    networkServerHelper.SetEndDevices (endDevices);
@@ -280,7 +278,7 @@
     *  Simulation  *
     ****************/
 
-   Simulator::Stop (Seconds (simulationTime) + Hours (1));
+   Simulator::Stop (simulationTime + Hours (1));
 
    NS_LOG_INFO ("Running simulation...");
    Simulator::Run ();

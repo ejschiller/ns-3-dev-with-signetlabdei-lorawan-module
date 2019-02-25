@@ -69,7 +69,6 @@ NetworkServer::NetworkServer () :
   m_packetLossBecauseTransmitting(0),
   m_numberOfPacketsPerTransaction(0)
 {
-
   NS_LOG_FUNCTION_NOARGS ();
 }
 
@@ -343,7 +342,6 @@ NetworkServer::RegisterRequiredTransmissions (unsigned char ch_attempts, bool fl
     m_requiredTransmissions[attempts-1] = m_requiredTransmissions[attempts-1] + 1;
     //NS_LOG_UNCOND ("Total number of transmissions required to deliver this packet: " << (int) attempts);
   }
-
 }
 
 void
