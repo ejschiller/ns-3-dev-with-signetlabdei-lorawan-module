@@ -76,6 +76,24 @@ NetworkServerHelper::SetSimulationTime (Time stopTime)
 }
 
 void
+NetworkServerHelper::SetFileName (std::string fname)
+{
+  filename = fname;
+}
+
+void
+NetworkServerHelper::SetCsvStaticDef (std::string def)
+{
+  csvStaticDef = def;
+}
+
+void
+NetworkServerHelper::SetCsvStaticData (std::string data)
+{
+  csvStaticData = data;
+}
+
+void
 NetworkServerHelper::EnableTransactionMode (void)
 {
   m_transactionMode = true;
@@ -112,14 +130,25 @@ NetworkServerHelper::InstallPriv (Ptr<Node> node)
 
   Ptr<NetworkServer> app = m_factory.Create<NetworkServer> ();
 
-  if(m_collectStats) app->EnableStatsCollection ();
-  if(m_transactionMode)
+  if (m_collectStats) app->EnableStatsCollection ();
+  if (m_transactionMode)
   {
     app->EnableTransactionMode ();
     app->SetNumberOfPacketsPerTransaction(m_numberOfPacketsPerTransaction);
   }
 
   app->SetStopTime (simulationTime);
+
+  if (filename.length () > 0)
+  {
+    app->SetFileName (filename);
+  }
+
+  if (csvStaticDef.length () > 0 && csvStaticData.length () > 0)
+  {
+    app->SetCsvStaticDef (csvStaticDef);
+    app->SetCsvStaticData (csvStaticData);
+  }
 
   app->SetNode (node);
   node->AddApplication (app);

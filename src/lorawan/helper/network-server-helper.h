@@ -81,6 +81,21 @@ public:
 
   void SetSimulationTime (Time stopTime);
 
+  /**
+  * Set the filename of the .csv file for recording simulation results.
+  */
+  void SetFileName (std::string fname);
+
+  /**
+  * Set the definition of static data to be written into the result-CSV.
+  */
+  void SetCsvStaticDef (std::string def);
+
+  /**
+  * Set the static simulation data to be written into the result-CSV.
+  */
+  void SetCsvStaticData (std::string data);
+
 private:
   void InstallComponents (Ptr<NetworkServer> netServer);
   Ptr<Application> InstallPriv (Ptr<Node> node);
@@ -100,6 +115,12 @@ private:
   int m_numberOfPacketsPerTransaction;
 
   Time simulationTime;
+
+  std::string filename;
+
+  std::string csvStaticDef;
+
+  std::string csvStaticData;
 };
 
 } // namespace ns3

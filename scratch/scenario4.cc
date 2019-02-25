@@ -265,6 +265,24 @@
    networkServerHelper.EnableStatsCollection ();
    networkServerHelper.EnableTransactionMode ();
    networkServerHelper.SetSimulationTime (simulationTime);
+   networkServerHelper.SetFileName ("scenario4.csv");
+   networkServerHelper.SetCsvStaticDef ("def_n-3,def_n-2,");
+   std::stringstream streamDef;
+   std::stringstream streamData;
+   streamDef << "NEndDevices,NGateways,SimulationTime," <<
+                "InterTransactionDelay,IntraTransactionDelay," <<
+                "PacketsPerTransaction,SignaturePacketsPerTransaction," <<
+                "DataPacketSize,PartialSignaturePacketSize,";
+   streamData << nDevices << "," << nGateways << "," <<
+                 simulationTime.GetSeconds () << "," <<
+                 interTransactionDelay.GetSeconds () << "," <<
+                 intraTransactionDelay.GetSeconds () << "," <<
+                 packetsPerTransaction << "," <<
+                 signaturePacketsPerTransaction << "," <<
+                 dataPacketSize << "," <<
+                 partialSignaturePacketSize << ",";
+   networkServerHelper.SetCsvStaticDef(streamDef.str ());
+   networkServerHelper.SetCsvStaticData(streamData.str ());
    networkServerHelper.SetNumberOfPacketsPerTransaction (packetsPerTransaction
                                             + signaturePacketsPerTransaction);
    networkServerHelper.SetGateways (gateways);

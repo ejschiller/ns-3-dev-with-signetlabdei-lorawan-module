@@ -37,3 +37,8 @@ build-dir/
 build/
 /.cproject
 /.project
+
+buildings.txt
+performance
+
+scenario*.csv

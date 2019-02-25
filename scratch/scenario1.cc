@@ -21,6 +21,7 @@
  #include "ns3/command-line.h"
  #include "ns3/network-server-helper.h"
  #include "ns3/forwarder-helper.h"
+ #include <sstream>
 
  using namespace ns3;
  using namespace lorawan;
@@ -257,6 +258,17 @@
    NetworkServerHelper networkServerHelper;
    networkServerHelper.EnableStatsCollection ();
    networkServerHelper.SetSimulationTime (simulationTime);
+   networkServerHelper.SetFileName ("scenario1.csv");
+   std::stringstream streamDef;
+   std::stringstream streamData;
+   streamDef << "NEndDevices,NGateways,SimulationTime," <<
+                "InterTransmissionDelay,PacketSize,";
+   streamData << nDevices << "," << nGateways << "," <<
+                 simulationTime.GetSeconds () << "," <<
+                 interTransmissionDelay.GetSeconds () << "," <<
+                 packetSize << ",";
+   networkServerHelper.SetCsvStaticDef(streamDef.str ());
+   networkServerHelper.SetCsvStaticData(streamData.str ());
    networkServerHelper.SetGateways (gateways);
    networkServerHelper.SetEndDevices (endDevices);
    networkServerHelper.Install (networkServers);

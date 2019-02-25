@@ -257,6 +257,17 @@ int main (int argc, char *argv[])
   NetworkServerHelper networkServerHelper;
   networkServerHelper.EnableStatsCollection ();
   networkServerHelper.SetSimulationTime (simulationTime);
+  networkServerHelper.SetFileName ("scenario2.csv");
+  std::stringstream streamDef;
+  std::stringstream streamData;
+  streamDef << "NEndDevices,NGateways,SimulationTime," <<
+               "InterTransmissionDelay,PacketSize,";
+  streamData << nDevices << "," << nGateways << "," <<
+                simulationTime.GetSeconds () << "," <<
+                interTransmissionDelay.GetSeconds () << "," <<
+                packetSize << ",";
+  networkServerHelper.SetCsvStaticDef(streamDef.str ());
+  networkServerHelper.SetCsvStaticData(streamData.str ());
   networkServerHelper.SetGateways (gateways);
   networkServerHelper.SetEndDevices (endDevices);
   networkServerHelper.Install (networkServers);

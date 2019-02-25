@@ -40,6 +40,7 @@
 #include <map>
 #include <set>
 #include <algorithm>
+#include <string>
 
 namespace ns3 {
 namespace lorawan {
@@ -122,6 +123,21 @@ public:
   void SetNumberOfPacketsPerTransaction (int packets);
 
   /**
+  * Set the filename of the .csv file for recording simulation results.
+  */
+  void SetFileName (std::string fname);
+
+  /**
+  * Set the definition of static data to be written into the result-CSV.
+  */
+  void SetCsvStaticDef (std::string def);
+
+  /**
+  * Set the static simulation data to be written into the result-CSV.
+  */
+  void SetCsvStaticData (std::string data);
+
+  /**
   * Register the successful arrival of some packet. If m_transactionMode is true,
   * packet metadata (header) is analyzed for recording transactional statistics.
   */
@@ -192,6 +208,9 @@ private:
   std::map<int, std::set<int>> m_successfulTransmissions;
   std::map<int, std::set<int>> m_unsuccessfulTransmissions;
   std::map<int, std::map<int, std::set<int>>> m_transactionalPackets;
+  std::string filename;
+  std::string csvStaticDef;
+  std::string csvStaticData;
 };
 
 } /* namespace ns3 */

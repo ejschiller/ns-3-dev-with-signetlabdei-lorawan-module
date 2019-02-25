@@ -67,7 +67,8 @@ NetworkServer::NetworkServer () :
   m_packetLossUnderSensitivity(0),
   m_packetLossNoMoreReceivers(0),
   m_packetLossBecauseTransmitting(0),
-  m_numberOfPacketsPerTransaction(0)
+  m_numberOfPacketsPerTransaction(0),
+  filename ("output.csv")
 {
   NS_LOG_FUNCTION_NOARGS ();
 }
@@ -275,6 +276,24 @@ void
 NetworkServer::SetNumberOfPacketsPerTransaction (int packets)
 {
   m_numberOfPacketsPerTransaction = packets;
+}
+
+void
+NetworkServer::SetFileName (std::string fname)
+{
+  filename = fname;
+}
+
+void
+NetworkServer::SetCsvStaticDef (std::string def)
+{
+  csvStaticDef = def;
+}
+
+void
+NetworkServer::SetCsvStaticData (std::string data)
+{
+  csvStaticData = data;
 }
 
 void
@@ -493,13 +512,33 @@ NetworkServer::PrintStatistics (void)
       }
     }
 
-    double successRatePerc = 100 * (double) successfulTransactions
+    double successRate = (double) successfulTransactions
                             / (successfulTransactions + incompleteTransactions);
     NS_LOG_UNCOND("# of successful transactions: " << successfulTransactions);
     NS_LOG_UNCOND("# of incomplete transactions: " << incompleteTransactions);
-    NS_LOG_UNCOND("Success rate: " << successRatePerc << "%");
+    NS_LOG_UNCOND("Success rate: " << successRate * 100 << "%");
     NS_LOG_UNCOND("Throughput: " << successfulTransactions * conversion
                     << " transactions per hour.");
+
+    std::ofstream outfile;
+    std::ifstream file(filename);
+    if(!file)
+    {
+        outfile.open (filename, std::ios_base::app);
+        outfile << csvStaticDef << "SuccessfulTransactions," <<
+                                   "IncompleteTransactions," <<
+                                   "SuccessRate," <<
+                                   "Throughput" <<  std::endl;
+    }
+    else
+    {
+      outfile.open (filename, std::ios_base::app);
+    }
+
+    outfile << csvStaticData << successfulTransactions << "," <<
+                                incompleteTransactions << "," <<
+                                successRate << "," <<
+                                successfulTransactions * conversion << std::endl;
   }
   else
   {
@@ -536,17 +575,34 @@ NetworkServer::PrintStatistics (void)
       unsuccessfulTransmissions += ite->second.size ();
     }
 
-    double successRatePerc = 100 * (double) successfulTransmissions
+    double successRate = (double) successfulTransmissions
                             / (successfulTransmissions + unsuccessfulTransmissions);
     NS_LOG_UNCOND("# of successful transmissions: " << successfulTransmissions);
     NS_LOG_UNCOND("# of unsuccessful transmissions: " << unsuccessfulTransmissions);
-    NS_LOG_UNCOND("Success rate: " << successRatePerc << "%");
+    NS_LOG_UNCOND("Success rate: " << successRate * 100 << "%");
     NS_LOG_UNCOND("Throughput: " << successfulTransmissions * conversion
                     << " transmissions per hour.");
 
+    std::ofstream outfile;
+    std::ifstream file(filename);
+    if(!file)
+    {
+        outfile.open (filename, std::ios_base::app);
+        outfile << csvStaticDef << "SuccessfulTransmissions," <<
+                                   "UnsuccessfulTransmissions," <<
+                                   "SuccessRate," <<
+                                   "Throughput" <<  std::endl;
+    }
+    else
+    {
+      outfile.open (filename, std::ios_base::app);
+    }
+
+    outfile << csvStaticData << successfulTransmissions << "," <<
+                                unsuccessfulTransmissions << "," <<
+                                successRate << "," <<
+                                successfulTransmissions * conversion << std::endl;
   }
 }
-
-
 }
 }
