@@ -30,7 +30,7 @@ NS_LOG_COMPONENT_DEFINE ("Scenario2");
 // Network settings
 int nDevices = 50;
 const int nGateways = 5;
-Time simulationTime = Seconds (1000);
+Time simulationTime = Hours (1);
 Time interTransmissionDelay = Seconds (60);
 int packetSize = 32;
 

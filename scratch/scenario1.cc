@@ -31,7 +31,7 @@
  // Network settings
  int nDevices = 50;
  const int nGateways = 5;
- Time simulationTime = Seconds (6000);
+ Time simulationTime = Hours (1);
  Time interTransmissionDelay = Seconds (60);
  int packetSize = 32;
 

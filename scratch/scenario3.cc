@@ -29,9 +29,9 @@
  NS_LOG_COMPONENT_DEFINE ("Scenario3");
 
  // Network settings
- int nDevices = 20;
+ int nDevices = 50;
  const int nGateways = 5;
- Time simulationTime = Seconds (500);
+ Time simulationTime = Hours (1);
  int dataPacketSize = 42;
  int partialSignaturePacketSize = 34;
  Time intraTransactionDelay = Seconds (10);
