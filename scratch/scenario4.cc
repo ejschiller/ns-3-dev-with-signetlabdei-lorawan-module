@@ -49,6 +49,13 @@
    cmd.AddValue ("simulationTime",
                  "The time for which to simulate",
                  simulationTime);
+   cmd.AddValue ("intraDelay",
+                 "The delay between two succeeding transmissions",
+                 intraTransactionDelay);
+   cmd.AddValue ("interDelay",
+                 "The delay between two succeeding transactions",
+                 interTransactionDelay);
+
    cmd.Parse (argc, argv);
 
    // Set up logging

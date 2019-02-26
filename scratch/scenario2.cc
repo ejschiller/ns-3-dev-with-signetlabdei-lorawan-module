@@ -44,7 +44,9 @@ int main (int argc, char *argv[])
   cmd.AddValue ("simulationTime",
                 "The time for which to simulate",
                 simulationTime);
-
+  cmd.AddValue ("delay",
+                "The delay between two succeeding transmissions",
+                interTransmissionDelay);
   cmd.Parse (argc, argv);
 
   // Set up logging
