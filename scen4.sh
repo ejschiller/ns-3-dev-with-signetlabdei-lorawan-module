@@ -6,10 +6,13 @@ for number in $nEndDevices
 do
   for delay in $delays
   do
+    start=`date +%s`
     echo '================================================================='
     echo 'In progress: nDevices = '$number', inter-/intraTransactionDelay = '$delay
     ./waf --run "scenario4 --nDevices=$number --intraDelay=$delay --interDelay=$delay"
+    end=`date +%s`
     echo 'Finished: nDevices = '$number', inter-/intraTransactionDelay = '$delay
+    echo "Execution time: "$((end-start))" s"
     echo -e '=================================================================\n\n'
   done
 done
