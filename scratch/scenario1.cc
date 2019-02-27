@@ -33,7 +33,7 @@
  const int nGateways = 5;
  Time simulationTime = Hours (1);
  Time interTransmissionDelay = Seconds (60);
- int packetSize = 32;
+ int packetSize = 42;
 
 
  int main (int argc, char *argv[])

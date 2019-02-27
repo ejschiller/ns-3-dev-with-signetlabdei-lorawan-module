@@ -28,7 +28,6 @@ TransactionalSenderHelper::TransactionalSenderHelper () :
 
   m_initialDelayRV = CreateObject<UniformRandomVariable> ();
   m_initialDelayRV->SetAttribute ("Min", DoubleValue (0));
-  m_initialDelayRV->SetAttribute ("Max", DoubleValue (2000));
 
 }
 
@@ -67,7 +66,7 @@ TransactionalSenderHelper::InstallPriv (Ptr<Node> node) const
 
   Ptr<TransactionalSender> app = m_factory.Create<TransactionalSender> ();
 
-  app->SetInitialDelay (Seconds (m_initialDelayRV->GetValue()));
+  app->SetInitialDelay (Seconds (m_initialDelayRV->GetValue (0, interTransactionDelay.GetSeconds ())));
 
   if(dataPktSize != 0) app->SetDataPacketSize(dataPktSize);
   if(sigPartPktSize != 0) app->SetPartialSignaturePacketSize(sigPartPktSize);
