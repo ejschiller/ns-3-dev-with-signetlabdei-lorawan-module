@@ -31,7 +31,7 @@
  // Network settings
  int nDevices = 50;
  const int nGateways = 5;
- Time simulationTime = Hours (1);
+ Time simulationTime = Hours (0.5);
  int dataPacketSize = 42;
  int partialSignaturePacketSize = 34;
  Time intraTransactionDelay = Seconds (10);

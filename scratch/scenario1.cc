@@ -31,7 +31,7 @@
  // Network settings
  int nDevices = 50;
  const int nGateways = 5;
- Time simulationTime = Hours (1);
+ Time simulationTime = Hours (0.5);
  Time interTransmissionDelay = Seconds (60);
  int packetSize = 42;
 
@@ -75,7 +75,7 @@
    // LogComponentEnable("NetworkController", LOG_LEVEL_ALL);
    //LogComponentEnable("LoraPacketTracker", LOG_LEVEL_ALL);
    //LogComponentEnable ("MobilityHelper", LOG_LEVEL_ALL);
-   LogComponentEnable ("NetworkServerHelper", LOG_LEVEL_ALL);
+   //LogComponentEnable ("NetworkServerHelper", LOG_LEVEL_ALL);
    //LogComponentEnable ("NetworkServer", LOG_LEVEL_ALL);
    LogComponentEnableAll (LOG_PREFIX_FUNC);
    LogComponentEnableAll (LOG_PREFIX_NODE);
