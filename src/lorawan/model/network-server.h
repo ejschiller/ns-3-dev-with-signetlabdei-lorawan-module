@@ -181,7 +181,12 @@ public:
   /**
   * Register a successful transmission of a packet belonging to some transaction.
   */
-  void RegisterTransactionalPacket (Ptr<Packet> packet);
+  void RegisterSuccessfulTransactionalPacket (Ptr<Packet> packet);
+
+  /**
+  * Register a successful transmission of a packet belonging to some transaction.
+  */
+  void RegisterUnsuccessfulTransactionalPacket (Ptr<Packet> packet);
 
   /**
   * Print statistics at the end of the simulation. Requires m_collectStats to be true.
@@ -207,7 +212,8 @@ private:
   std::vector<int> m_requiredTransmissions;
   std::map<int, std::set<int>> m_successfulTransmissions;
   std::map<int, std::set<int>> m_unsuccessfulTransmissions;
-  std::map<int, std::map<int, std::set<int>>> m_transactionalPackets;
+  std::map<int, std::map<int, std::set<int>>> m_successfulTransactionalPackets;
+  std::map<int, std::map<int, std::set<int>>> m_unsuccessfulTransactionalPackets;
   std::string filename;
   std::string csvStaticDef;
   std::string csvStaticData;

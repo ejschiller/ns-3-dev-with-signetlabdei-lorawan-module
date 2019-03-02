@@ -222,7 +222,7 @@ NetworkServer::Receive (Ptr<NetDevice> device, Ptr<const Packet> packet,
   }
   else if (m_collectStats && m_transactionMode)
   {
-    RegisterTransactionalPacket (myPacket);
+    RegisterSuccessfulTransactionalPacket (myPacket);
   }
 
   // Fire the trace source
@@ -306,11 +306,14 @@ NetworkServer::RegisterPacketReception (Ptr<const Packet> packet, unsigned int i
 void
 NetworkServer::RegisterPacketLossInterference (Ptr<const Packet> packet, unsigned int index)
 {
-  if(!m_transactionMode)
+  Ptr<Packet> myPacket = packet->Copy ();
+
+  if (m_transactionMode)
   {
-    Ptr<Packet> myPacket = packet->Copy ();
-    RegisterUnsuccessfulTransmission (myPacket);
+    RegisterUnsuccessfulTransactionalPacket (myPacket);
   }
+  else RegisterUnsuccessfulTransmission (myPacket);
+
   ++m_packetLossInterference;
   //NS_LOG_UNCOND("Lost a packet due to interference. Interference packet loss count = " << m_packetLossInterference);
 }
@@ -318,11 +321,14 @@ NetworkServer::RegisterPacketLossInterference (Ptr<const Packet> packet, unsigne
 void
 NetworkServer::RegisterPacketLossUnderSensitivity (Ptr<const Packet> packet, unsigned int index)
 {
-  if(!m_transactionMode)
+  Ptr<Packet> myPacket = packet->Copy ();
+
+  if (m_transactionMode)
   {
-    Ptr<Packet> myPacket = packet->Copy ();
-    RegisterUnsuccessfulTransmission (myPacket);
+    RegisterUnsuccessfulTransactionalPacket (myPacket);
   }
+  else RegisterUnsuccessfulTransmission (myPacket);
+
   ++m_packetLossUnderSensitivity;
   //NS_LOG_UNCOND("Lost a packet due to reception under sensitivity. Under sensitivity packet loss count = " << m_packetLossUnderSensitivity);
 }
@@ -330,11 +336,14 @@ NetworkServer::RegisterPacketLossUnderSensitivity (Ptr<const Packet> packet, uns
 void
 NetworkServer::RegisterPacketLossNoMoreReceivers (Ptr<const Packet> packet, unsigned int index)
 {
-  if(!m_transactionMode)
+  Ptr<Packet> myPacket = packet->Copy ();
+
+  if (m_transactionMode)
   {
-    Ptr<Packet> myPacket = packet->Copy ();
-    RegisterUnsuccessfulTransmission (myPacket);
+    RegisterUnsuccessfulTransactionalPacket (myPacket);
   }
+  else RegisterUnsuccessfulTransmission (myPacket);
+
   ++m_packetLossNoMoreReceivers;
   //NS_LOG_UNCOND("Lost a packet because no more receivers were available. No more receivers packet loss count = " << m_packetLossNoMoreReceivers);
 }
@@ -342,11 +351,14 @@ NetworkServer::RegisterPacketLossNoMoreReceivers (Ptr<const Packet> packet, unsi
 void
 NetworkServer::RegisterPacketLossBecauseTransmitting (Ptr<const Packet> packet, unsigned int index)
 {
-  if(!m_transactionMode)
+  Ptr<Packet> myPacket = packet->Copy ();
+
+  if (m_transactionMode)
   {
-    Ptr<Packet> myPacket = packet->Copy ();
-    RegisterUnsuccessfulTransmission (myPacket);
+    RegisterUnsuccessfulTransactionalPacket (myPacket);
   }
+  else RegisterUnsuccessfulTransmission (myPacket);
+
   ++m_packetLossBecauseTransmitting;
   //NS_LOG_UNCOND("Lost a packet because GW was transmitting during packet arrival. GW Tx packet loss count = " << m_packetLossBecauseTransmitting);
 }
@@ -419,7 +431,7 @@ NetworkServer::RegisterUnsuccessfulTransmission (Ptr<Packet> packet)
 }
 
 void
-NetworkServer::RegisterTransactionalPacket (Ptr<Packet> packet)
+NetworkServer::RegisterSuccessfulTransactionalPacket (Ptr<Packet> packet)
 {
   NS_ASSERT(m_transactionMode);
   TransactionalPacketHeader transactionalHdr;
@@ -429,15 +441,15 @@ NetworkServer::RegisterTransactionalPacket (Ptr<Packet> packet)
   int transactionIdTmp = (int) transactionalHdr.GetTransactionId ();
   int packetIdTmp = (int) transactionalHdr.GetPacketId ();
 
-  auto search = m_transactionalPackets.find (nodeUidTmp);
-  if (search == m_transactionalPackets.end ())
+  auto search = m_successfulTransactionalPackets.find (nodeUidTmp);
+  if (search == m_successfulTransactionalPackets.end ())
   {
     std::map<int, std::set<int>> transactionMap;
     // Registering the first transaction for this node;
     std::set<int> transaction;
     transaction.insert (packetIdTmp);
     transactionMap.insert (std::make_pair (transactionIdTmp, transaction));
-    m_transactionalPackets.insert (std::make_pair (nodeUidTmp, transactionMap));
+    m_successfulTransactionalPackets.insert (std::make_pair (nodeUidTmp, transactionMap));
   }
   else
   {
@@ -452,6 +464,51 @@ NetworkServer::RegisterTransactionalPacket (Ptr<Packet> packet)
     else
     {
       searchTransaction->second.insert(packetIdTmp);
+    }
+  }
+}
+
+void
+NetworkServer::RegisterUnsuccessfulTransactionalPacket (Ptr<Packet> packet)
+{
+  NS_ASSERT(m_transactionMode);
+  LoraFrameHeader loraFrameHeader;
+  LoraMacHeader loraMacHeader;
+  if(packet->GetSize () > (loraFrameHeader.GetSerializedSize () + loraMacHeader.GetSerializedSize ()))
+  {
+    TransactionalPacketHeader transactionalHdr;
+    packet->RemoveHeader (loraMacHeader);
+    packet->RemoveHeader (loraFrameHeader);
+    packet->RemoveHeader (transactionalHdr);
+
+    int nodeUidTmp = (int) transactionalHdr.GetNodeUid ();
+    int transactionIdTmp = (int) transactionalHdr.GetTransactionId ();
+    int packetIdTmp = (int) transactionalHdr.GetPacketId ();
+
+    auto search = m_unsuccessfulTransactionalPackets.find (nodeUidTmp);
+    if (search == m_unsuccessfulTransactionalPackets.end ())
+    {
+      std::map<int, std::set<int>> transactionMap;
+      // Registering the first transaction for this node;
+      std::set<int> transaction;
+      transaction.insert (packetIdTmp);
+      transactionMap.insert (std::make_pair (transactionIdTmp, transaction));
+      m_unsuccessfulTransactionalPackets.insert (std::make_pair (nodeUidTmp, transactionMap));
+    }
+    else
+    {
+      // Checking, if for this node the packet's transaction is already present
+      auto searchTransaction = search->second.find (transactionIdTmp);
+      if (searchTransaction == search->second.end ())
+      {
+        std::set<int> transaction;
+        transaction.insert (packetIdTmp);
+        search->second.insert (std::make_pair (transactionIdTmp, transaction));
+      }
+      else
+      {
+        searchTransaction->second.insert(packetIdTmp);
+      }
     }
   }
 }
@@ -485,28 +542,53 @@ NetworkServer::PrintStatistics (void)
     // Computing the number of entirely received transactions (all packets + signature packets received)
     int successfulTransactions = 0;
     int incompleteTransactions = 0;
-    for (auto edIte = m_transactionalPackets.begin (); edIte != m_transactionalPackets.end (); ++edIte)
+    for (auto edIte = m_successfulTransactionalPackets.begin (); edIte != m_successfulTransactionalPackets.end (); ++edIte)
     {
+      int highestTransactionId = 0;
       for (auto transIte = edIte->second.begin (); transIte != edIte->second.end (); ++transIte)
       {
+        // Recording the highest transaction id present in the m_successfulTransactionalPackets map
+        if (transIte->first > highestTransactionId) highestTransactionId = transIte->first;
+
+        // Counting this transaction to the no. of successful transactions, if its size fulfils the requirement
         if (transIte->second.size () == (unsigned int) m_numberOfPacketsPerTransaction)
         {
-          NS_LOG_DEBUG("Successful transaction nr.: " << transIte->first <<
+          NS_LOG_DEBUG ("Successful transaction nr.: " << transIte->first <<
            ", size: " << transIte->second.size () << ", node :" << edIte->first);
 
           ++successfulTransactions;
-        }
-        else
-        {
-          /* If the last transaction is incomplete, it will not count to the no.
-             of unsuccessful transactions, just because the simulation ended du-
-             ring an ongoing transaction. */
-          if (transIte != (std::prev(edIte->second.end (), 1)))
-          {
-            NS_LOG_DEBUG("Failed transaction nr.: " << transIte->first <<
-            ", size: " << transIte->second.size () << ", node :" << edIte->first);
 
-            ++incompleteTransactions;
+          // Removing the transaction from the m_unsuccessfulTransactionalPackets map, if present there
+          auto edIte2 = m_unsuccessfulTransactionalPackets.find (edIte->first);
+          if (edIte2 != m_unsuccessfulTransactionalPackets.end ())
+          {
+            edIte2->second.erase (transIte->first);
+          }
+        }
+      }
+
+      auto edIte2 = m_unsuccessfulTransactionalPackets.find (edIte->first);
+      // Checking, if there is a transaction map for the current node
+      if (edIte2 != m_unsuccessfulTransactionalPackets.end ())
+      {
+        for (auto transIte2 = edIte2->second.begin (); transIte2 != edIte2->second.end (); ++transIte2)
+        {
+          NS_LOG_DEBUG ("Unsuccessful transaction nr.: " << transIte2->first <<
+           ", size: " << transIte2->second.size () << ", node :" << edIte2->first);
+
+          ++incompleteTransactions;
+        }
+
+        if (edIte2->second.size () > 0)
+        {
+          auto lastTrans = std::prev (edIte2->second.end (), 1);
+          /* If the last unsuccessful transaction's ID is bigger than the greatest successful transaction
+             ID, it is truly the node's last transaction. If its size is smaller than the no. of packets
+             per transaction, it is assumed, that its failure is due to short simulation time.*/
+          if (lastTrans->first > highestTransactionId &&
+              lastTrans->second.size () < (unsigned int) m_numberOfPacketsPerTransaction)
+          {
+            --incompleteTransactions;
           }
         }
       }
