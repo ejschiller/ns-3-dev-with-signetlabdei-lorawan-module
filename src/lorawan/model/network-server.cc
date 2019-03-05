@@ -547,7 +547,7 @@ NetworkServer::PrintStatistics (void)
       int highestTransactionId = 0;
       for (auto transIte = edIte->second.begin (); transIte != edIte->second.end (); ++transIte)
       {
-        // Recording the highest transaction id present in the m_successfulTransactionalPackets map
+        // Recording the ID of the current node's latest successful transaction
         if (transIte->first > highestTransactionId) highestTransactionId = transIte->first;
 
         // Counting this transaction to the no. of successful transactions, if its size fulfils the requirement
@@ -589,6 +589,8 @@ NetworkServer::PrintStatistics (void)
               lastTrans->second.size () < (unsigned int) m_numberOfPacketsPerTransaction)
           {
             --incompleteTransactions;
+            NS_LOG_DEBUG ("Transaction failure due to short simulation time, not counting as unsuccessful. ID: "
+            << lastTrans->first << ", size: " << lastTrans->second.size () << ", node :" << edIte2->first);
           }
         }
       }
