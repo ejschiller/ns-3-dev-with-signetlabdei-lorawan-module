@@ -9,7 +9,8 @@ do
     start=`date +%s`
     echo '================================================================='
     echo 'In progress: nDevices = '$number', inter-/intraTransactionDelay = '$delay
-    ./waf --run "scenario4 --nDevices=$number --intraDelay=$delay --interDelay=$delay"
+    mkdir -p logs
+    ./waf --run "scenario4 --nDevices=$number --intraDelay=$delay --interDelay=$delay" > logs/scen4_${delay}_${number}.txt 2>&1
     end=`date +%s`
     echo 'Finished: nDevices = '$number', inter-/intraTransactionDelay = '$delay
     date +%d.%m", "%X

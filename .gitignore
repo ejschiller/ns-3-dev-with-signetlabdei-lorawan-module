@@ -42,3 +42,5 @@ buildings.txt
 performance
 
 scenario*.csv
+
+logs/
