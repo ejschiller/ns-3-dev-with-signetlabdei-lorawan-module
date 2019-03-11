@@ -582,10 +582,10 @@ NetworkServer::PrintStatistics (void)
         if (edIte2->second.size () > 0)
         {
           auto lastTrans = std::prev (edIte2->second.end (), 1);
-          /* If the last unsuccessful transaction's ID is bigger than the greatest successful transaction
+          /* If the last unsuccessful transaction's ID is equal or > the greatest successful transaction
              ID, it is truly the node's last transaction. If its size is smaller than the no. of packets
              per transaction, it is assumed, that its failure is due to short simulation time.*/
-          if (lastTrans->first > highestTransactionId &&
+          if (lastTrans->first >= highestTransactionId &&
               lastTrans->second.size () < (unsigned int) m_numberOfPacketsPerTransaction)
           {
             --incompleteTransactions;
@@ -610,7 +610,7 @@ NetworkServer::PrintStatistics (void)
     {
         outfile.open (filename, std::ios_base::app);
         outfile << csvStaticDef << "SuccessfulTransactions," <<
-                                   "IncompleteTransactions," <<
+                                   "UnsuccessfulTransactions," <<
                                    "SuccessRate," <<
                                    "Throughput" <<  std::endl;
     }
