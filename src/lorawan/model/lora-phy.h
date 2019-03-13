@@ -163,6 +163,8 @@ public:
    */
   virtual bool IsOnFrequency (double frequency) = 0;
 
+  bool IsChannelOccupied (double frequency);
+
   /**
    * Set the callback to call upon successful reception of a packet.
    *

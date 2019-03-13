@@ -307,6 +307,13 @@ EndDeviceLoraMac::SendToPhy (Ptr<Packet> packetToSend)
   Ptr<LogicalLoraChannel> txChannel = GetChannelForTx ();
 
   NS_LOG_DEBUG ("PacketToSend: " << packetToSend);
+  if (m_phy->IsChannelOccupied (txChannel->GetFrequency ()))
+  {
+    // increment the re-schedule counter here
+    // Simulator::Schedule (Seconds (1), &EndDeviceLoraMac::SendToPhy, this, packetToSend);
+    // return;
+  }
+
   m_phy->Send (packetToSend, params, txChannel->GetFrequency (), m_txPower);
 
   //////////////////////////////////////////////
