@@ -68,6 +68,8 @@ public:
 
   virtual bool IsOnFrequency (double frequencyMHz);
 
+  virtual bool IsChannelOccupied (double frequency);
+
   /**
    * Add a reception path, locked on a specific frequency.
    *

@@ -206,5 +206,12 @@ GatewayLoraPhy::IsOnFrequency (double frequencyMHz)
     }
   return false;
 }
+
+bool
+GatewayLoraPhy::IsChannelOccupied (double frequency)
+{
+  // TODO: Apply same method here as in EndDeviceLoraPhy, but with GW sensitivities.
+  return (frequency > 0);
+}
 }
 }

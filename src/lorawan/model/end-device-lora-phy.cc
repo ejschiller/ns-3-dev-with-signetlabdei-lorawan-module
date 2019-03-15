@@ -70,7 +70,8 @@ EndDeviceLoraPhy::GetTypeId (void)
 EndDeviceLoraPhy::EndDeviceLoraPhy () :
   m_state (SLEEP),
   m_frequency (868.1),
-  m_sf (7)
+  m_sf (7),
+  m_CSMAx (MilliSeconds (10))
 {
 }
 
@@ -106,6 +107,48 @@ bool
 EndDeviceLoraPhy::IsOnFrequency (double frequencyMHz)
 {
   return m_frequency == frequencyMHz;
+}
+
+bool
+EndDeviceLoraPhy::IsChannelOccupied (double frequency)
+{
+  // start- and endtime of CCG (Clear Channel Gap)
+  Time ccgStart = Simulator::Now ();
+  Time ccgEnd = ccgStart + m_CSMAx;
+
+  int occupierCount = 0;
+  // Copy the interferers list from LoraInterferenceHelper
+  std::list< Ptr< LoraInterferenceHelper::Event > > interferers = m_interference.GetInterferers ();
+  for (auto ite = interferers.begin (); ite != interferers.end (); ++ite)
+  {
+    uint8_t sf = (*ite)->GetSpreadingFactor ();
+
+    /**
+     * If there are events in the list, for which their start time is later than
+     * the end time of the CCG, or, if their end time is earlier than the start
+     * time of the CCG, they are not considered. Otherwise, these events are con-
+     * sidered as possible occupiers and investigated further for reception power.
+     */
+    if ((*ite)->GetFrequency () == frequency &&
+        !((*ite)->GetEndTime () <= ccgStart ||
+         ccgEnd < (*ite)->GetStartTime ()))
+    {
+      // Checking the reception power against the sensitivity thresholds
+      if ((*ite)->GetRxPowerdBm () > sensitivity[sf - 7])
+      {
+        ++occupierCount;
+        NS_LOG_DEBUG ("Occupier found for frequency: " << (*ite)->GetFrequency () <<
+                         "MHz, RxPower: " << (*ite)->GetRxPowerdBm () << " dBm " <<
+                         "@ SF" << (unsigned int) sf << " (threshold = " <<
+                         sensitivity[sf - 7] << " dBm), eventStart: " <<
+                         (*ite)->GetStartTime ().GetSeconds () << ", eventEnd: " <<
+                         (*ite)->GetEndTime ().GetSeconds () << ", ccgStart: " <<
+                         ccgStart.GetSeconds () << ", ccgEnd: " <<
+                         ccgEnd.GetSeconds ());
+      }
+    }
+  }
+  return (occupierCount != 0);
 }
 
 void

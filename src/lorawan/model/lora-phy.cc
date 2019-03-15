@@ -154,26 +154,6 @@ LoraPhy::SetTxFinishedCallback (TxFinishedCallback callback)
   m_txFinishedCallback = callback;
 }
 
-bool
-LoraPhy::IsChannelOccupied (double frequency)
-{
-  int interfererCount = 0;
-  // Copy the interferers list from LoraInterferenceHelper
-  std::list< Ptr< LoraInterferenceHelper::Event > > interferers = m_interference.GetInterferers ();
-  for (auto ite = interferers.begin (); ite != interferers.end (); ++ite)
-  {
-    if ((*ite)->GetFrequency () == frequency &&
-        (*ite)->GetStartTime () <= Simulator::Now () &&
-        Simulator::Now () <= (*ite)->GetEndTime ())
-    {
-      ++interfererCount;
-      NS_LOG_DEBUG ("Interferer found for frequency: " << (*ite)->GetFrequency () <<
-                     "MHz, RxPower: " << (*ite)->GetRxPowerdBm () << " dBm.");
-    }
-  }
-  return (interfererCount != 0);
-}
-
 Time
 LoraPhy::GetOnAirTime (Ptr<Packet> packet, LoraTxParameters txParams)
 {

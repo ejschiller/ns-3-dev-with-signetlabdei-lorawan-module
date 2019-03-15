@@ -164,6 +164,9 @@ public:
   // Implementation of LoraPhy's pure virtual functions
   virtual bool IsTransmitting (void);
 
+  // Implementation of LoraPhy's pure virtual functions
+  virtual bool IsChannelOccupied (double frequency);
+
   /**
    * Set the frequency this EndDevice will listen on.
    *
@@ -258,6 +261,8 @@ protected:
   double m_frequency; //!< The frequency this device is listening on
 
   uint8_t m_sf; //!< The Spreading Factor this device is listening for
+
+  Time m_CSMAx; //!< The duration x in ms of the CCG (Clear Channel Gap) when using CSMA-x
 
   /**
    * typedef for a list of EndDeviceLoraPhyListener

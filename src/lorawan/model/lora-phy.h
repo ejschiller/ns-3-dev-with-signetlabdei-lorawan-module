@@ -163,7 +163,16 @@ public:
    */
   virtual bool IsOnFrequency (double frequency) = 0;
 
-  bool IsChannelOccupied (double frequency);
+  /**
+   * Checks if there are occupying signals on the channel during the CCG (Clear
+   * Channel Gap) when using CSMA-x presented by Duda & To (2018, URL:
+   * https://ieeexplore.ieee.org/abstract/document/8422800).
+   *
+   * \param frequency The frequency on which the signal is planned to be sent
+   * \returns true if there are no channel occupiers present whose signals could
+   * be received above the end device's reception sensitivity, false otherwise.
+   */
+  virtual bool IsChannelOccupied (double frequency) = 0;
 
   /**
    * Set the callback to call upon successful reception of a packet.
