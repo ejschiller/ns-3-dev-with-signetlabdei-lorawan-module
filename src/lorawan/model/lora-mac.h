@@ -276,6 +276,17 @@ protected:
    * sending DR and on the value of the RX1DROffset parameter.
    */
   ReplyDataRateMatrix m_replyDataRateMatrix;
+
+  /**
+   * Counter indicating the current attempt to conduct a transmission when
+   * using CSMA-x.
+   */
+  uint8_t m_CSMAattemptCounter;
+
+  /**
+   * Maximum allowed transmission attempts when using CSMA-x.
+   */
+  uint8_t m_CSMAmaxAttempts;
 };
 
 } /* namespace ns3 */

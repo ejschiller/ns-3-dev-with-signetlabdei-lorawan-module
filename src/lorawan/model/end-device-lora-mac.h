@@ -77,6 +77,11 @@ public:
    */
   virtual void postponeTransmission (Time nextTxDelay, Ptr<Packet>);
 
+  /**
+   * Applying the formula used by Duda & To in their CSMA-x scheme to backoff
+   * transmissions, if the channel was occupied during a CCG.
+   */
+  virtual void BackoffTransmission (Ptr<Packet> packetToSend);
 
   ///////////////////////
   // Receiving methods //

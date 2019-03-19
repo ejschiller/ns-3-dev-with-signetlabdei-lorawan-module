@@ -255,10 +255,14 @@ EndDeviceLoraMac::DoSend (Ptr<Packet> packet)
           NS_LOG_DEBUG ("Copied packet: " << m_retxParams.packet);
           m_sentNewPacket (m_retxParams.packet);
 
+          // Resetting the CSMA attempt counter
+          m_CSMAattemptCounter = 0;
           SendToPhy (m_retxParams.packet);
         }
       else
         {
+          // Resetting the CSMA attempt counter
+          m_CSMAattemptCounter = 0;
           SendToPhy (packet);
         }
 
@@ -271,6 +275,8 @@ EndDeviceLoraMac::DoSend (Ptr<Packet> packet)
           m_retxParams.retxLeft = m_retxParams.retxLeft - 1;   // decreasing the number of retransmissions
           NS_LOG_DEBUG ("Retransmitting an old packet.");
 
+          // Resetting the CSMA attempt counter
+          m_CSMAattemptCounter = 0;
           SendToPhy (m_retxParams.packet);
         }
     }
@@ -280,6 +286,14 @@ EndDeviceLoraMac::DoSend (Ptr<Packet> packet)
 void
 EndDeviceLoraMac::SendToPhy (Ptr<Packet> packetToSend)
 {
+  // TODO: Check, if this could be moved into the BackoffTransmission method
+  // Checking, if the max. no. of re-attempts was already exceeded
+  if (m_CSMAattemptCounter == m_CSMAmaxAttempts) {
+      NS_LOG_DEBUG ("Max. re-attempts exceeded for packet: " << packetToSend);
+      // TODO: Drop the packet by firing a trace (m_CSMAmaxAttemptsExceeded)
+      return;
+  }
+
   /////////////////////////////////////////////////////////
   // Add headers, prepare TX parameters and send the packet
   /////////////////////////////////////////////////////////
@@ -307,11 +321,15 @@ EndDeviceLoraMac::SendToPhy (Ptr<Packet> packetToSend)
   Ptr<LogicalLoraChannel> txChannel = GetChannelForTx ();
 
   NS_LOG_DEBUG ("PacketToSend: " << packetToSend);
+
+  // Calling PHY to assess if channel is free
   if (m_phy->IsChannelOccupied (txChannel->GetFrequency ()))
   {
-    // increment the re-schedule counter here
-    // Simulator::Schedule (Seconds (1), &EndDeviceLoraMac::SendToPhy, this, packetToSend);
-    // return;
+    BackoffTransmission (packetToSend);
+
+    // TODO: Check this: Simulator::Cancel (m_nextTx);
+
+    return;
   }
 
   m_phy->Send (packetToSend, params, txChannel->GetFrequency (), m_txPower);
@@ -341,6 +359,25 @@ EndDeviceLoraMac::SendToPhy (Ptr<Packet> packetToSend)
 
   m_phy->GetObject<EndDeviceLoraPhy> ()->SetSpreadingFactor
     (GetSfFromDataRate (replyDataRate));
+}
+
+void
+EndDeviceLoraMac::BackoffTransmission (Ptr<Packet> packetToSend)
+{
+  // NS_ASSERT (m_LBTmode);
+  ++m_CSMAattemptCounter;
+
+  // Computing the next random delay
+  uint8_t min = 0;
+  // Formula according to CSMA-x presented by Duda & To
+  uint8_t max = std::pow(2, m_CSMAattemptCounter) - 1;
+  // Setting the duration of the next random backoff interval
+  Time interval = Seconds (m_uniformRV->GetValue (min, max));
+
+  // Scheduling the next transmission attempt
+  m_nextTx = Simulator::Schedule (interval, &EndDeviceLoraMac::DoSend, this, packetToSend);
+
+  NS_LOG_UNCOND ("Here's the random delay: " << interval.GetSeconds () << " " << packetToSend);
 }
 
 //////////////////////////

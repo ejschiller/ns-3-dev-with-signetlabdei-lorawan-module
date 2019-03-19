@@ -52,7 +52,9 @@ LoraMac::GetTypeId (void)
   return tid;
 }
 
-LoraMac::LoraMac ()
+LoraMac::LoraMac () :
+    m_CSMAattemptCounter (0),
+    m_CSMAmaxAttempts (3)
 {
   NS_LOG_FUNCTION (this);
 }
