@@ -116,7 +116,6 @@ EndDeviceLoraPhy::IsChannelOccupied (double frequency)
   Time ccgStart = Simulator::Now ();
   Time ccgEnd = ccgStart + m_CSMAx;
 
-  int occupierCount = 0;
   // Copy the interferers list from LoraInterferenceHelper
   std::list< Ptr< LoraInterferenceHelper::Event > > interferers = m_interference.GetInterferers ();
   for (auto ite = interferers.begin (); ite != interferers.end (); ++ite)
@@ -136,7 +135,6 @@ EndDeviceLoraPhy::IsChannelOccupied (double frequency)
       // Checking the reception power against the sensitivity thresholds
       if ((*ite)->GetRxPowerdBm () > sensitivity[sf - 7])
       {
-        ++occupierCount;
         NS_LOG_DEBUG ("Occupier found for frequency: " << (*ite)->GetFrequency () <<
                          "MHz, RxPower: " << (*ite)->GetRxPowerdBm () << " dBm " <<
                          "@ SF" << (unsigned int) sf << " (threshold = " <<
@@ -145,10 +143,13 @@ EndDeviceLoraPhy::IsChannelOccupied (double frequency)
                          (*ite)->GetEndTime ().GetSeconds () << ", ccgStart: " <<
                          ccgStart.GetSeconds () << ", ccgEnd: " <<
                          ccgEnd.GetSeconds ());
+        // Return true immediately upon finding the first interferer
+        return true;
       }
     }
   }
-  return (occupierCount != 0);
+  // At this point, the entire list was checked and no interferer was found.
+  return false;
 }
 
 void

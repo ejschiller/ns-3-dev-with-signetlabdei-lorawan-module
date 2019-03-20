@@ -200,6 +200,11 @@ EndDeviceLoraMac::postponeTransmission (Time netxTxDelay, Ptr<Packet> packet)
 void
 EndDeviceLoraMac::DoSend (Ptr<Packet> packet)
 {
+  // Cancelling possibly ongoing re-attempt when using CSMA-x
+  Simulator::Cancel (m_nextReAttempt);
+  // Resetting the CSMA attempt counter
+  m_CSMAattemptCounter = 0;
+
   NS_LOG_FUNCTION (this);
   // Checking if this is the transmission of a new packet
   if (packet != m_retxParams.packet)
@@ -255,14 +260,10 @@ EndDeviceLoraMac::DoSend (Ptr<Packet> packet)
           NS_LOG_DEBUG ("Copied packet: " << m_retxParams.packet);
           m_sentNewPacket (m_retxParams.packet);
 
-          // Resetting the CSMA attempt counter
-          m_CSMAattemptCounter = 0;
           SendToPhy (m_retxParams.packet);
         }
       else
         {
-          // Resetting the CSMA attempt counter
-          m_CSMAattemptCounter = 0;
           SendToPhy (packet);
         }
 
@@ -275,8 +276,6 @@ EndDeviceLoraMac::DoSend (Ptr<Packet> packet)
           m_retxParams.retxLeft = m_retxParams.retxLeft - 1;   // decreasing the number of retransmissions
           NS_LOG_DEBUG ("Retransmitting an old packet.");
 
-          // Resetting the CSMA attempt counter
-          m_CSMAattemptCounter = 0;
           SendToPhy (m_retxParams.packet);
         }
     }
@@ -286,14 +285,6 @@ EndDeviceLoraMac::DoSend (Ptr<Packet> packet)
 void
 EndDeviceLoraMac::SendToPhy (Ptr<Packet> packetToSend)
 {
-  // TODO: Check, if this could be moved into the BackoffTransmission method
-  // Checking, if the max. no. of re-attempts was already exceeded
-  if (m_CSMAattemptCounter == m_CSMAmaxAttempts) {
-      NS_LOG_DEBUG ("Max. re-attempts exceeded for packet: " << packetToSend);
-      // TODO: Drop the packet by firing a trace (m_CSMAmaxAttemptsExceeded)
-      return;
-  }
-
   /////////////////////////////////////////////////////////
   // Add headers, prepare TX parameters and send the packet
   /////////////////////////////////////////////////////////
@@ -326,9 +317,7 @@ EndDeviceLoraMac::SendToPhy (Ptr<Packet> packetToSend)
   if (m_phy->IsChannelOccupied (txChannel->GetFrequency ()))
   {
     BackoffTransmission (packetToSend);
-
-    // TODO: Check this: Simulator::Cancel (m_nextTx);
-
+    // Stop this transmission attempt, if backing off due to busy channel
     return;
   }
 
@@ -364,8 +353,16 @@ EndDeviceLoraMac::SendToPhy (Ptr<Packet> packetToSend)
 void
 EndDeviceLoraMac::BackoffTransmission (Ptr<Packet> packetToSend)
 {
-  // NS_ASSERT (m_LBTmode);
+  // TODO: NS_ASSERT (m_LBTmode);
   ++m_CSMAattemptCounter;
+
+  // Checking, if the max. no. of re-attempts was already exceeded
+  if (m_CSMAattemptCounter > m_CSMAmaxAttempts)
+  {
+    NS_LOG_DEBUG ("Max. re-attempts exceeded, dropping packet: " << packetToSend);
+    // TODO: Fire a trace (m_CSMAmaxAttemptsExceeded)
+    return;
+  }
 
   // Computing the next random delay
   uint8_t min = 0;
@@ -374,10 +371,10 @@ EndDeviceLoraMac::BackoffTransmission (Ptr<Packet> packetToSend)
   // Setting the duration of the next random backoff interval
   Time interval = Seconds (m_uniformRV->GetValue (min, max));
 
-  // Scheduling the next transmission attempt
-  m_nextTx = Simulator::Schedule (interval, &EndDeviceLoraMac::DoSend, this, packetToSend);
+  NS_LOG_DEBUG ("Backing off during an interval of: " << interval.GetSeconds () << " s, attemptCounter = " << (unsigned int) m_CSMAattemptCounter);
 
-  NS_LOG_UNCOND ("Here's the random delay: " << interval.GetSeconds () << " " << packetToSend);
+  // Scheduling the next transmission attempt
+  m_nextReAttempt = Simulator::Schedule (interval, &EndDeviceLoraMac::SendToPhy, this, packetToSend);
 }
 
 //////////////////////////

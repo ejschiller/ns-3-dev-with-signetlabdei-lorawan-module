@@ -80,6 +80,8 @@ public:
   /**
    * Applying the formula used by Duda & To in their CSMA-x scheme to backoff
    * transmissions, if the channel was occupied during a CCG.
+   *
+   * \param packet the packet to send
    */
   virtual void BackoffTransmission (Ptr<Packet> packetToSend);
 
@@ -508,6 +510,14 @@ TracedValue<uint8_t> m_requiredTx;
    * This Event is used to cancel the transmission of this packet if a newer packet is delivered from the application to be sent.
    */
   EventId m_nextRetx;
+
+  /**
+   * The event of re-scheduling the next sending attempt when using CSMA-x.
+   *
+   * This Event is used to cancel further attempts, if a newer packet is delivered from the application to be sent.
+   */
+  EventId m_nextReAttempt;
+
   /**
    * The address of this device.
    */

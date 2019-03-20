@@ -169,7 +169,8 @@ public:
    * https://ieeexplore.ieee.org/abstract/document/8422800).
    *
    * \param frequency The frequency on which the signal is planned to be sent
-   * \returns true if there are no channel occupiers present whose signals could
+   *
+   * \returns true if there is at least one channel occupier whose signals could
    * be received above the end device's reception sensitivity, false otherwise.
    */
   virtual bool IsChannelOccupied (double frequency) = 0;
