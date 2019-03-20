@@ -67,6 +67,7 @@ NetworkServer::NetworkServer () :
   m_packetLossUnderSensitivity(0),
   m_packetLossNoMoreReceivers(0),
   m_packetLossBecauseTransmitting(0),
+  m_packetDropsDueToMaxLBTAttemptsReached (0),
   m_numberOfPacketsPerTransaction(0),
   filename ("output.csv")
 {
@@ -117,29 +118,30 @@ NetworkServer::AddGateway (Ptr<Node> gateway, Ptr<NetDevice> netDevice)
   Ptr<GatewayLoraPhy> gwPhy = gateway->GetDevice (0)->GetObject<LoraNetDevice> ()->
     GetPhy ()->GetObject<GatewayLoraPhy> ();
 
-  if(m_collectStats) {
+  if (m_collectStats)
+  {
 
-    gwPhy->TraceConnectWithoutContext("ReceivedPacket",
+    gwPhy->TraceConnectWithoutContext ("ReceivedPacket",
                                         MakeCallback
                                         (&NetworkServer::RegisterPacketReception,
                                         this));
 
-    gwPhy->TraceConnectWithoutContext("LostPacketBecauseInterference",
+    gwPhy->TraceConnectWithoutContext ("LostPacketBecauseInterference",
                                         MakeCallback
                                         (&NetworkServer::RegisterPacketLossInterference,
                                         this));
 
-    gwPhy->TraceConnectWithoutContext("LostPacketBecauseUnderSensitivity",
+    gwPhy->TraceConnectWithoutContext ("LostPacketBecauseUnderSensitivity",
                                         MakeCallback
                                         (&NetworkServer::RegisterPacketLossUnderSensitivity,
                                         this));
 
-    gwPhy->TraceConnectWithoutContext("LostPacketBecauseNoMoreReceivers",
+    gwPhy->TraceConnectWithoutContext ("LostPacketBecauseNoMoreReceivers",
                                         MakeCallback
                                         (&NetworkServer::RegisterPacketLossNoMoreReceivers,
                                         this));
 
-    gwPhy->TraceConnectWithoutContext("NoReceptionBecauseTransmitting",
+    gwPhy->TraceConnectWithoutContext ("NoReceptionBecauseTransmitting",
                                         MakeCallback
                                         (&NetworkServer::RegisterPacketLossBecauseTransmitting,
                                         this));
@@ -190,11 +192,21 @@ NetworkServer::AddNode (Ptr<Node> node)
   Ptr<EndDeviceLoraMac> edLoraMac =
     loraNetDevice->GetMac ()->GetObject<EndDeviceLoraMac> ();
 
-  // Keep track of the total number of transmissions required to deliver this packet
-  edLoraMac->TraceConnectWithoutContext("RequiredTransmissions",
-                                        MakeCallback
-                                        (&NetworkServer::RegisterRequiredTransmissions,
-                                        this));
+  if (m_collectStats)
+  {
+    // Keep track of the total number of transmissions required to deliver this packet
+    edLoraMac->TraceConnectWithoutContext ("RequiredTransmissions",
+                                           MakeCallback
+                                           (&NetworkServer::RegisterRequiredTransmissions,
+                                           this));
+
+    edLoraMac->TraceConnectWithoutContext ("CannotSendBecauseMaxLBTAttemptsReached",
+                                           MakeCallback
+                                           (&NetworkServer::RegisterPacketDropDueToMaxLBTAttemptsReached,
+                                           this));
+  }
+
+
 
   // Update the NetworkStatus about the existence of this node
   m_status->AddNode (edLoraMac);
@@ -300,7 +312,6 @@ void
 NetworkServer::RegisterPacketReception (Ptr<const Packet> packet, unsigned int index)
 {
   ++m_receivedPackets;
-  //NS_LOG_UNCOND("Successfully received a packet. Packet count = " << m_receivedPackets);
 }
 
 void
@@ -315,7 +326,6 @@ NetworkServer::RegisterPacketLossInterference (Ptr<const Packet> packet, unsigne
   else RegisterUnsuccessfulTransmission (myPacket);
 
   ++m_packetLossInterference;
-  //NS_LOG_UNCOND("Lost a packet due to interference. Interference packet loss count = " << m_packetLossInterference);
 }
 
 void
@@ -371,8 +381,13 @@ NetworkServer::RegisterRequiredTransmissions (unsigned char ch_attempts, bool fl
   if (attempts > 0)
   {
     m_requiredTransmissions[attempts-1] = m_requiredTransmissions[attempts-1] + 1;
-    //NS_LOG_UNCOND ("Total number of transmissions required to deliver this packet: " << (int) attempts);
   }
+}
+
+void
+NetworkServer::RegisterPacketDropDueToMaxLBTAttemptsReached (Ptr<const Packet> packet)
+{
+  ++m_packetDropsDueToMaxLBTAttemptsReached;
 }
 
 void
@@ -522,11 +537,14 @@ NetworkServer::PrintStatistics (void)
                 " # of packets lost due to interference |" <<
                 " # of packets lost due to reception under sensitivity |" <<
                 " # of packets lost because no more receivers |"<<
-                " # of packets lost because GW was transmitting during packet arrival ]");
+                " # of packets lost because GW was transmitting during packet arrival |" <<
+                " # of packets dropped due due to reaching the maximum allowed " <<
+                " transmission attempts when using CSMA-x ]");
   NS_LOG_UNCOND("[ " << m_receivedPackets << " || " << m_packetLossInterference <<
                 " | " << m_packetLossUnderSensitivity << " | " <<
                  m_packetLossNoMoreReceivers << " | " <<
-                  m_packetLossBecauseTransmitting << " ]");
+                 m_packetLossBecauseTransmitting << " | " <<
+                 m_packetDropsDueToMaxLBTAttemptsReached << " ]");
   NS_LOG_UNCOND("Matrix 2, # of transmissions required to deliver packets successfully:" <<
                 " [ 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 ]");
   NS_LOG_UNCOND("[ " << m_requiredTransmissions[0] << " | " << m_requiredTransmissions[1] <<

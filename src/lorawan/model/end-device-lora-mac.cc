@@ -72,6 +72,12 @@ EndDeviceLoraMac::GetTypeId (void)
                      MakeTraceSourceAccessor
                        (&EndDeviceLoraMac::m_aggregatedDutyCycle),
                      "ns3::TracedValueCallback::Double")
+    .AddTraceSource ("CannotSendBecauseMaxLBTAttemptsReached",
+                     "Trace source indicating a packet was dropped due to reaching "
+                     "the maximum allowed transmission attempts when using CSMA-x",
+                     MakeTraceSourceAccessor
+                       (&EndDeviceLoraMac::m_cannotSendBecauseMaxLBTAttemptsReached),
+                     "ns3::Packet::TracedCallback")
     .AddConstructor<EndDeviceLoraMac> ();
   return tid;
 }
@@ -360,7 +366,8 @@ EndDeviceLoraMac::BackoffTransmission (Ptr<Packet> packetToSend)
   if (m_CSMAattemptCounter > m_CSMAmaxAttempts)
   {
     NS_LOG_DEBUG ("Max. re-attempts exceeded, dropping packet: " << packetToSend);
-    // TODO: Fire a trace (m_CSMAmaxAttemptsExceeded)
+    // Firing the trace indicating having reached the maximum attempts
+    m_cannotSendBecauseMaxLBTAttemptsReached (packetToSend);
     return;
   }
 

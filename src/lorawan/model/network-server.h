@@ -169,6 +169,11 @@ public:
   void RegisterRequiredTransmissions (unsigned char ch_attempts, bool flag, Time time, Ptr<Packet> packet);
 
   /**
+  * Register a paket drop due to reaching the maximum allowed attempts when using CSMA-x.
+  */
+  void RegisterPacketDropDueToMaxLBTAttemptsReached (Ptr<const Packet> packet);
+
+  /**
   * Register a successful packet transmission in the m_successfulTransmissions map.
   */
   void RegisterSuccessfulTransmission (Ptr<Packet> packet);
@@ -208,6 +213,7 @@ private:
   uint32_t m_packetLossUnderSensitivity;
   uint32_t m_packetLossNoMoreReceivers;
   uint32_t m_packetLossBecauseTransmitting;
+  uint32_t m_packetDropsDueToMaxLBTAttemptsReached;
   int m_numberOfPacketsPerTransaction;
   std::vector<int> m_requiredTransmissions;
   std::map<int, std::set<int>> m_successfulTransmissions;

@@ -588,6 +588,14 @@ TracedValue<uint8_t> m_requiredTx;
    */
   TracedCallback<uint8_t, bool, Time, Ptr<Packet> > m_requiredTxCallback;
 
+  /**
+   * The trace source fired when a packet is dropped due to reaching the maximum
+   * allowed attempts when using CSMA-x.
+   *
+   * \see LoraMac::m_CSMAmaxAttempts
+   */
+  TracedCallback<Ptr<const Packet> > m_cannotSendBecauseMaxLBTAttemptsReached;
+
 };
 
 
