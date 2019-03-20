@@ -320,7 +320,7 @@ EndDeviceLoraMac::SendToPhy (Ptr<Packet> packetToSend)
   NS_LOG_DEBUG ("PacketToSend: " << packetToSend);
 
   // Calling PHY to assess if channel is free
-  if (m_phy->IsChannelOccupied (txChannel->GetFrequency ()))
+  if (m_isCSMAactivated && m_phy->IsChannelOccupied (txChannel->GetFrequency ()))
   {
     BackoffTransmission (packetToSend);
     // Stop this transmission attempt, if backing off due to busy channel
@@ -359,7 +359,8 @@ EndDeviceLoraMac::SendToPhy (Ptr<Packet> packetToSend)
 void
 EndDeviceLoraMac::BackoffTransmission (Ptr<Packet> packetToSend)
 {
-  // TODO: NS_ASSERT (m_LBTmode);
+  NS_ASSERT (m_isCSMAactivated);
+  
   ++m_CSMAattemptCounter;
 
   // Checking, if the max. no. of re-attempts was already exceeded

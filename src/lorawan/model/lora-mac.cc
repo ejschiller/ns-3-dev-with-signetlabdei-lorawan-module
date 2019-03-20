@@ -54,7 +54,8 @@ LoraMac::GetTypeId (void)
 
 LoraMac::LoraMac () :
     m_CSMAattemptCounter (0),
-    m_CSMAmaxAttempts (3)
+    m_CSMAmaxAttempts (3),
+    m_isCSMAactivated (false)
 {
   NS_LOG_FUNCTION (this);
 }
@@ -188,5 +189,12 @@ LoraMac::SetReplyDataRateMatrix (ReplyDataRateMatrix replyDataRateMatrix)
 {
   m_replyDataRateMatrix = replyDataRateMatrix;
 }
+
+void
+LoraMac::ActivateListenBeforeTalk (void)
+{
+  m_isCSMAactivated = true;
+}
+
 }
 }

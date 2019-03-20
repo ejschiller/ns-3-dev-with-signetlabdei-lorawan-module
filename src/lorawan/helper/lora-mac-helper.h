@@ -92,6 +92,11 @@ public:
   void SetRegion (enum Regions region);
 
   /**
+   * Setter to use CSMA-x for all devices.
+   */
+  void UseListenBeforeTalk (void);
+
+  /**
    * Create the LoRaMac instance and connect it to a device
    *
    * \param node the node on which we wish to create a wifi MAC.
@@ -135,6 +140,7 @@ private:
   Ptr<LoraDeviceAddressGenerator> m_addrGen; //!< Pointer to the address generator to use
   enum DeviceType m_deviceType; //!< The kind of device to install
   enum Regions m_region; //!< The region in which the device will operate
+  bool m_activateCSMA; // !< Indicates whether the helper should activate CSMA-x in the MACs
 };
 
 } //namespace ns3

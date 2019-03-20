@@ -30,7 +30,8 @@ namespace lorawan {
 NS_LOG_COMPONENT_DEFINE ("LoraMacHelper");
 
 LoraMacHelper::LoraMacHelper ()
-  : m_region (LoraMacHelper::EU)
+  : m_region (LoraMacHelper::EU),
+    m_activateCSMA (false)
 {
 }
 
@@ -70,11 +71,20 @@ LoraMacHelper::SetRegion (enum LoraMacHelper::Regions region)
   m_region = region;
 }
 
+void
+LoraMacHelper::UseListenBeforeTalk (void)
+{
+  m_activateCSMA = true;
+}
+
 Ptr<LoraMac>
 LoraMacHelper::Create (Ptr<Node> node, Ptr<NetDevice> device) const
 {
   Ptr<LoraMac> mac = m_mac.Create<LoraMac> ();
   mac->SetDevice (device);
+
+  // If CSMA-x should be used, activate it
+  if (m_activateCSMA) mac->ActivateListenBeforeTalk ();
 
   // If we are operating on an end device, add an address to it
   if (m_deviceType == ED && m_addrGen != 0)

@@ -210,6 +210,11 @@ public:
    */
   int GetNPreambleSymbols (void);
 
+  /**
+   * Setter to activate CSMA-x mode.
+   */
+  void ActivateListenBeforeTalk (void);
+
 protected:
   /**
   * The trace source that is fired when a packet cannot be sent because of duty
@@ -287,6 +292,12 @@ protected:
    * Maximum allowed transmission attempts when using CSMA-x.
    */
   uint8_t m_CSMAmaxAttempts;
+
+  /**
+   * Boolean indicating whether CSMA-x is activated. If true, CSMA-x is activ-
+   * ated and  duty cycle enforcement is deactivated; If false, vice-versa.
+   */
+  bool m_isCSMAactivated;
 };
 
 } /* namespace ns3 */
