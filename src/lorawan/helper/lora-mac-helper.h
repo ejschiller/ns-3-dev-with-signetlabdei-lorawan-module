@@ -94,7 +94,7 @@ public:
   /**
    * Setter to use CSMA-x for all devices.
    */
-  void UseListenBeforeTalk (void);
+  void UseListenBeforeTalk (bool lbt);
 
   /**
    * Create the LoRaMac instance and connect it to a device

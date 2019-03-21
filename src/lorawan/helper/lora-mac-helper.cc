@@ -72,9 +72,9 @@ LoraMacHelper::SetRegion (enum LoraMacHelper::Regions region)
 }
 
 void
-LoraMacHelper::UseListenBeforeTalk (void)
+LoraMacHelper::UseListenBeforeTalk (bool lbt)
 {
-  m_activateCSMA = true;
+  m_activateCSMA = lbt;
 }
 
 Ptr<LoraMac>

@@ -154,18 +154,21 @@ EndDeviceLoraMac::Send (Ptr<Packet> packet)
 
   // If it is not possible to transmit now because of the duty cycle,
   // or because we are receiving, schedule a tx/retx later
+  if (!m_isCSMAactivated)
+  {
+     Time netxTxDelay = GetNextTransmissionDelay ();
+     if (netxTxDelay != Seconds (0))
+     {
+       // Add the ACK_TIMEOUT random delay if it is a retransmission.
+       if (m_retxParams.waitingAck)
+       {
+         double ack_timeout = m_uniformRV->GetValue (1,3);
+         netxTxDelay = netxTxDelay + Seconds (ack_timeout);
+       }
+       postponeTransmission (netxTxDelay, packet);
+     }
+  }
 
-  Time netxTxDelay = GetNextTransmissionDelay ();
-  if (netxTxDelay != Seconds (0))
-    {
-      // Add the ACK_TIMEOUT random delay if it is a retransmission.
-      if (m_retxParams.waitingAck)
-        {
-          double ack_timeout = m_uniformRV->GetValue (1,3);
-          netxTxDelay = netxTxDelay + Seconds (ack_timeout);
-        }
-      postponeTransmission (netxTxDelay, packet);
-    }
 
   // Pick a channel on which to transmit the packet
   Ptr<LogicalLoraChannel> txChannel = GetChannelForTx ();
@@ -194,6 +197,7 @@ EndDeviceLoraMac::Send (Ptr<Packet> packet)
 void
 EndDeviceLoraMac::postponeTransmission (Time netxTxDelay, Ptr<Packet> packet)
 {
+  NS_ASSERT (!m_isCSMAactivated);
   NS_LOG_FUNCTION (this);
   // Delete previously scheduled transmissions if any.
   Simulator::Cancel (m_nextTx);

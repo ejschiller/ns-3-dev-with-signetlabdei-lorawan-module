@@ -295,7 +295,7 @@ protected:
 
   /**
    * Boolean indicating whether CSMA-x is activated. If true, CSMA-x is activ-
-   * ated and  duty cycle enforcement is deactivated; If false, vice-versa.
+   * ated and duty cycle enforcement is deactivated; If false, vice-versa.
    */
   bool m_isCSMAactivated;
 };
