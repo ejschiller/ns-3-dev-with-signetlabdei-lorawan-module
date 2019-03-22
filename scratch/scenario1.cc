@@ -203,6 +203,7 @@
    macHelper.SetAddressGenerator (addrGen);
    phyHelper.SetDeviceType (LoraPhyHelper::ED);
    macHelper.SetDeviceType (LoraMacHelper::ED);
+   macHelper.UseListenBeforeTalk (true);
    helper.Install (phyHelper, macHelper, endDevices);
 
    // Now end devices are connected to the channel
