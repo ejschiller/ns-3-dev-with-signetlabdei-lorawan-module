@@ -543,7 +543,7 @@ NetworkServer::PrintStatistics (void)
                 " # of packets lost due to reception under sensitivity |" <<
                 " # of packets lost because no more receivers |"<<
                 " # of packets lost because GW was transmitting during packet arrival |" <<
-                " # of packets dropped due due to reaching the maximum allowed " <<
+                " # of packets dropped due to reaching the maximum allowed" <<
                 " transmission attempts when using CSMA-x ]");
   NS_LOG_UNCOND("[ " << m_receivedPackets << " || " << m_packetLossInterference <<
                 " | " << m_packetLossUnderSensitivity << " | " <<
