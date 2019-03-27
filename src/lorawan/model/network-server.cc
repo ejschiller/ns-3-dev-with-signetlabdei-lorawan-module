@@ -536,12 +536,16 @@ NetworkServer::PrintStatistics (void)
 
   double conversion = (Hours(1).GetSeconds () / m_stopTime.GetSeconds ());
 
+  /////////////////////////////////////////////////////
+  // Success assessment of multi-packet transactions //
+  /////////////////////////////////////////////////////
   if(m_transactionMode)
   {
     NS_ASSERT(m_numberOfPacketsPerTransaction > 0);
     // Computing the number of entirely received transactions (all packets + signature packets received)
     int successfulTransactions = 0;
     int incompleteTransactions = 0;
+    // Iteration over all end devices in m_successfulTransactionalPackets
     for (auto edIte = m_successfulTransactionalPackets.begin (); edIte != m_successfulTransactionalPackets.end (); ++edIte)
     {
       int highestTransactionId = 0;
@@ -582,9 +586,11 @@ NetworkServer::PrintStatistics (void)
         if (edIte2->second.size () > 0)
         {
           auto lastTrans = std::prev (edIte2->second.end (), 1);
-          /* If the last unsuccessful transaction's ID is equal or > the greatest successful transaction
-             ID, it is truly the node's last transaction. If its size is smaller than the no. of packets
-             per transaction, it is assumed, that its failure is due to short simulation time.*/
+          /**
+          * If the last unsuccessful transaction's ID is equal or > the greatest successful transaction
+          * ID, it is truly the node's last transaction. If its size is smaller than the no. of packets
+          * per transaction, it is assumed, that its failure is due to short simulation time.
+          */
           if (lastTrans->first >= highestTransactionId &&
               lastTrans->second.size () < (unsigned int) m_numberOfPacketsPerTransaction)
           {
@@ -599,7 +605,7 @@ NetworkServer::PrintStatistics (void)
     double successRate = (double) successfulTransactions
                             / (successfulTransactions + incompleteTransactions);
     NS_LOG_UNCOND("# of successful transactions: " << successfulTransactions);
-    NS_LOG_UNCOND("# of incomplete transactions: " << incompleteTransactions);
+    NS_LOG_UNCOND("# of unsuccessful transactions: " << incompleteTransactions);
     NS_LOG_UNCOND("Success rate: " << successRate * 100 << "%");
     NS_LOG_UNCOND("Throughput: " << successfulTransactions * conversion
                     << " transactions per hour.");
@@ -624,12 +630,15 @@ NetworkServer::PrintStatistics (void)
                                 successRate << "," <<
                                 successfulTransactions * conversion << std::endl;
   }
+  ///////////////////////////////////////////////////////////////////////////////////////
+  // Success assessment of single-packet transactions (referred to as 'transmissions') //
+  ///////////////////////////////////////////////////////////////////////////////////////
   else
   {
     // Computing the number of individual un-/successful packet transmissions
     int successfulTransmissions = 0;
     int unsuccessfulTransmissions = 0;
-
+    // Iteration over all end devices in m_successfulTransmissions
     for (auto ite = m_successfulTransmissions.begin (); ite != m_successfulTransmissions.end (); ++ite)
     {
       // successfulTransmissions += (size of set)
@@ -645,8 +654,22 @@ NetworkServer::PrintStatistics (void)
                              ite->second.begin (), ite->second.end (),
                              std::inserter (actualMissing, actualMissing.begin ()));
 
-        // recording the number of globally unsuccessful transmissions for this ED
-        unsuccessfulTransmissions += actualMissing.size ();
+        /**
+        * If the last unsuccessful transmission's ID is greater than the greatest successful transmission
+        * ID, it is truly the node's last transmission. It is assumed, that its failure is due to short
+        * simulation time, therefor, eventually the no. of unsuccessfulTransmissions is decreased by 1.
+        */
+        if ((*(--ite->second.end ())) < (*(--search->second.end ())))
+        {
+          // increasing the number of globally unsuccessful transmissions for this ED wrt to short simulation time.
+          int tempUnsuccessful = actualMissing.size () - 1;
+          if (tempUnsuccessful > 0) unsuccessfulTransmissions += actualMissing.size ();
+        }
+        else
+        {
+          // increasing the number of globally unsuccessful transmissions for this ED
+          unsuccessfulTransmissions += actualMissing.size ();
+        }
 
         // remove entry for this ED, such that only entries for EDs with only unsuccessful transmissions remain.
         m_unsuccessfulTransmissions.erase (search);
