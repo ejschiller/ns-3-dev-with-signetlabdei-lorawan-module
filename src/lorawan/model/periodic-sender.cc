@@ -57,7 +57,8 @@ PeriodicSender::PeriodicSender ()
   m_initialDelay (Seconds (1)),
   m_basePktSize (10),
   packet_count(0),
-  m_pktSizeRV (0)
+  m_pktSizeRV (0),
+  m_lastRound (false)
 
 {
   NS_LOG_FUNCTION_NOARGS ();
@@ -117,6 +118,13 @@ PeriodicSender::SetPacketCount (uint16_t count) {
 
 
 void
+PeriodicSender::ScheduleCancellation (void)
+{
+  Simulator::Cancel (m_sendEvent);
+}
+
+
+void
 PeriodicSender::SendPacket (void)
 {
   // If this is the first packet transmission, save the nodeUID for later use
@@ -142,19 +150,16 @@ PeriodicSender::SendPacket (void)
   // Filling the packet payload up with zeroes until the specified size.
   packet->AddPaddingAtEnd (m_basePktSize - packetSize);
 
-  /*PeriodicPacketHeader testHeaderReceive;
-  packet->RemoveHeader (testHeaderReceive);
-
-  NS_LOG_UNCOND("testHeaderReceive->GetNodeUid ()  = " << testHeaderReceive.GetNodeUid ());
-  NS_LOG_UNCOND("testHeaderReceive->GetPacketId ()  = " << testHeaderReceive.GetPacketId ());*/
-
   m_mac->Send (packet);
 
   ++packet_count;
-
-  // Schedule the next SendPacket event
-  m_sendEvent = Simulator::Schedule (m_interval, &PeriodicSender::SendPacket,
-                                     this);
+  // Checking if the simulation is not yet about to be stopped
+  if (!m_lastRound)
+  {
+    // Schedule the next SendPacket event
+    m_sendEvent = Simulator::Schedule (m_interval, &PeriodicSender::SendPacket,
+                                       this);
+  }
 
   NS_LOG_DEBUG ("Sent a packet of size " << packet->GetSize ());
 }
@@ -187,7 +192,10 @@ void
 PeriodicSender::StopApplication (void)
 {
   NS_LOG_FUNCTION_NOARGS ();
-  Simulator::Cancel (m_sendEvent);
+  m_lastRound = true;
+  // Cancel transactions taking too long to finish
+  Simulator::Schedule (Minutes (40), &PeriodicSender::ScheduleCancellation,
+                       this);
 }
 
 }

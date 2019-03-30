@@ -69,6 +69,12 @@ public:
   void SetPacketCount (uint16_t count);
 
   /**
+   * Cancel the next scheduled transmission.
+   * Expected to be invoked by StopApplication
+   */
+  void ScheduleCancellation (void);
+
+  /**
    * Send a packet using the LoraNetDevice's Send method
    */
   void SendPacket (void);
@@ -124,6 +130,13 @@ private:
    */
   Ptr<RandomVariableStream> m_pktSizeRV;
 
+  /**
+   * Flag to be set to true by PeriodicSender::StopApplication:
+   * If true, the application may only finish the last transaction,
+   * but not start new ones anymore. Requires application to be
+   * stopped earlier than Simulator::Stop.
+   */
+  bool m_lastRound;
 
 };
 

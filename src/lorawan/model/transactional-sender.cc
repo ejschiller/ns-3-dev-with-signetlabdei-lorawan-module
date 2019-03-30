@@ -43,11 +43,12 @@ TransactionalSender::TransactionalSender () :
   m_initialDelay (Seconds (1)),
   interTransactionDelay (Hours (2)),
   intraTransactionDelay (Seconds (10)),
-  dataPktSize(42),      // regular data packets, [40 B + 2 B] counter per packet
-  sigPartPktSize(34),   // one half of signature, [32 B + 2 B] counter per part
-  packetsPerTransaction(10),
+  dataPktSize (42),      // regular data packets, [40 B + 2 B] counter per packet
+  sigPartPktSize (34),   // one half of signature, [32 B + 2 B] counter per part
+  packetsPerTransaction (10),
   packet_count (0),
-  transaction_count(0)
+  transaction_count(0),
+  m_lastRound (false)
 
 {
   NS_LOG_FUNCTION_NOARGS ();
@@ -169,6 +170,11 @@ TransactionalSender::SetTransactionCount (uint16_t count) {
   transaction_count = count;
 }
 
+void
+TransactionalSender::ScheduleCancellation (void)
+{
+  Simulator::Cancel (m_sendEvent);
+}
 
 void
 TransactionalSender::SendPacket (void)
@@ -206,13 +212,6 @@ TransactionalSender::SendPacket (void)
     NS_LOG_DEBUG ("Sent signature packet 1/2 of size " << packet->GetSize () << " B");
     ++packet_count;
 
-    /*TransactionalPacketHeader testHeaderReceive;
-    packet->RemoveHeader (testHeaderReceive);
-
-    NS_LOG_UNCOND("testHeaderReceive->GetNodeUid ()  = " << testHeaderReceive.GetNodeUid ());
-    NS_LOG_UNCOND("testHeaderReceive->GetPacketId ()  = " << testHeaderReceive.GetPacketId ());
-    NS_LOG_UNCOND("testHeaderReceive->GetTransactionId ()  = " << testHeaderReceive.GetTransactionId ());*/
-
     m_sendEvent = Simulator::Schedule (intraTransactionDelay, &TransactionalSender::SendPacket,
                                      this);
 
@@ -225,9 +224,13 @@ TransactionalSender::SendPacket (void)
     packet->AddPaddingAtEnd (sigPartPktSize - packetSize);
     m_mac->Send (packet);
     NS_LOG_DEBUG ("Sent signature packet 2/2 of size " << packet->GetSize () << " B");
-    // next transaction is scheduled after the inter-transaction delay
-    m_sendEvent = Simulator::Schedule (interTransactionDelay, &TransactionalSender::SendPacket,
-                                     this);
+    // Checking if the simulation is not yet about to be stopped
+    if (!m_lastRound)
+    {
+      // next transaction is scheduled after the inter-transaction delay
+      m_sendEvent = Simulator::Schedule (interTransactionDelay, &TransactionalSender::SendPacket,
+                                             this);
+    }
 
   } else {
     // Filling the packet payload up with zeroes until the specified size.
@@ -269,7 +272,10 @@ void
 TransactionalSender::StopApplication (void)
 {
   NS_LOG_FUNCTION_NOARGS ();
-  Simulator::Cancel (m_sendEvent);
+  m_lastRound = true;
+  // Cancel transactions taking too long to finish
+  Simulator::Schedule (Minutes (40), &TransactionalSender::ScheduleCancellation,
+                       this);
 }
 
 }
