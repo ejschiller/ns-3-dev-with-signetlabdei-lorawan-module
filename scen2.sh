@@ -1,6 +1,6 @@
 #!/bin/bash
-nEndDevices='200 400 800 1200 1600'
-delays='120 65 35 14'
+nEndDevices='200 400 600 800 1000 1200 1400 1600'
+delays='120 95 65 35 14 9'
 
 for delay in $delays
 do
