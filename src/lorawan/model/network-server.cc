@@ -87,7 +87,12 @@ NetworkServer::StartApplication (void)
 void
 NetworkServer::StopApplication (void)
 {
-  if(m_collectStats) PrintStatistics ();
+  if(m_collectStats)
+  {
+    // Postponing the analysis function (there are transactions still finishing)
+    Simulator::Schedule (Minutes (50), &NetworkServer::PrintStatistics,
+                                       this);
+  }
   NS_LOG_FUNCTION_NOARGS ();
 }
 
@@ -548,12 +553,8 @@ NetworkServer::PrintStatistics (void)
     // Iteration over all end devices in m_successfulTransactionalPackets
     for (auto edIte = m_successfulTransactionalPackets.begin (); edIte != m_successfulTransactionalPackets.end (); ++edIte)
     {
-      int highestTransactionId = 0;
       for (auto transIte = edIte->second.begin (); transIte != edIte->second.end (); ++transIte)
       {
-        // Recording the ID of the current node's latest successful transaction
-        if (transIte->first > highestTransactionId) highestTransactionId = transIte->first;
-
         // Counting this transaction to the no. of successful transactions, if its size fulfils the requirement
         if (transIte->second.size () == (unsigned int) m_numberOfPacketsPerTransaction)
         {
@@ -581,23 +582,6 @@ NetworkServer::PrintStatistics (void)
            ", size: " << transIte2->second.size () << ", node :" << edIte2->first);
 
           ++incompleteTransactions;
-        }
-
-        if (edIte2->second.size () > 0)
-        {
-          auto lastTrans = std::prev (edIte2->second.end (), 1);
-          /**
-          * If the last unsuccessful transaction's ID is equal or > the greatest successful transaction
-          * ID, it is truly the node's last transaction. If its size is smaller than the no. of packets
-          * per transaction, it is assumed, that its failure is due to short simulation time.
-          */
-          if (lastTrans->first >= highestTransactionId &&
-              lastTrans->second.size () < (unsigned int) m_numberOfPacketsPerTransaction)
-          {
-            --incompleteTransactions;
-            NS_LOG_DEBUG ("Transaction failure due to short simulation time, not counting as unsuccessful. ID: "
-            << lastTrans->first << ", size: " << lastTrans->second.size () << ", node :" << edIte2->first);
-          }
         }
       }
     }
@@ -654,22 +638,8 @@ NetworkServer::PrintStatistics (void)
                              ite->second.begin (), ite->second.end (),
                              std::inserter (actualMissing, actualMissing.begin ()));
 
-        /**
-        * If the last unsuccessful transmission's ID is greater than the greatest successful transmission
-        * ID, it is truly the node's last transmission. It is assumed, that its failure is due to short
-        * simulation time, therefor, eventually the no. of unsuccessfulTransmissions is decreased by 1.
-        */
-        if ((*(--ite->second.end ())) < (*(--search->second.end ())))
-        {
-          // increasing the number of globally unsuccessful transmissions for this ED wrt to short simulation time.
-          int tempUnsuccessful = actualMissing.size () - 1;
-          if (tempUnsuccessful > 0) unsuccessfulTransmissions += actualMissing.size ();
-        }
-        else
-        {
-          // increasing the number of globally unsuccessful transmissions for this ED
-          unsuccessfulTransmissions += actualMissing.size ();
-        }
+        // increasing the number of globally unsuccessful transmissions for this ED
+        unsuccessfulTransmissions += actualMissing.size ();
 
         // remove entry for this ED, such that only entries for EDs with only unsuccessful transmissions remain.
         m_unsuccessfulTransmissions.erase (search);
