@@ -198,8 +198,16 @@ EndDeviceLoraMac::postponeTransmission (Time netxTxDelay, Ptr<Packet> packet)
   // Delete previously scheduled transmissions if any.
   Simulator::Cancel (m_nextTx);
   m_nextTx = Simulator::Schedule (netxTxDelay, &EndDeviceLoraMac::DoSend, this, packet);
-  NS_LOG_WARN ("Attempting to send, but the aggregate duty cycle won't allow it. Scheduling a tx at a delay "
-               << netxTxDelay.GetSeconds () << ".");
+  if (!m_isCSMAactivated)
+  {
+    NS_LOG_WARN ("Attempting to send, but the aggregate duty cycle won't allow it. Scheduling a tx at a delay "
+                   << netxTxDelay.GetSeconds () << ".");
+  }
+  else
+  {
+    NS_LOG_WARN ("Attempting to send, but there is a receive window still open. Scheduling a tx at a delay "
+                    << netxTxDelay.GetSeconds () << ".");
+  }
 }
 
 
@@ -898,12 +906,13 @@ EndDeviceLoraMac::GetNextTransmissionDelay (void)
       NS_LOG_WARN ("Attempting to send when there are receive windows:" <<
                    " Transmission postponed.");
       Time endSecondRxWindow = (m_receiveDelay2 + m_receiveWindowDuration);
-      // In LBT-mode, only checking receive windows is relevant.
+      // In LBT-mode, only waiting upon receive windows to close is relevant
       if (m_isCSMAactivated) return endSecondRxWindow;
       waitingTime = std::max (waitingTime, endSecondRxWindow);
     }
 
-  return waitingTime;
+  // In LBT-mode, the ED may transmit immediately (at this point, there are no more open receive windows)
+  return m_isCSMAactivated ? Seconds (0) : waitingTime;
 }
 
 Ptr<LogicalLoraChannel>
@@ -933,7 +942,8 @@ EndDeviceLoraMac::GetChannelForTx (void)
                     waitingTime.GetSeconds ());
 
       // Send immediately if we can
-      if (waitingTime == Seconds (0))
+      // Return this channel immediately if in LBT-mode
+      if (m_isCSMAactivated || waitingTime == Seconds (0))
         {
           return *it;
         }
