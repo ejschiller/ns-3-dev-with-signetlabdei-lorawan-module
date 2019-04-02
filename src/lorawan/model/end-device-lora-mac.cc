@@ -169,7 +169,7 @@ EndDeviceLoraMac::Send (Ptr<Packet> packet)
     * tually call DoSend (due to GetChannelForTx always returning a channel
     * in LBT-mode).
     */
-    if m_isCSMAactivated return;
+    if (m_isCSMAactivated) return;
   }
 
 
