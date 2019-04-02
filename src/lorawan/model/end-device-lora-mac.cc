@@ -164,6 +164,12 @@ EndDeviceLoraMac::Send (Ptr<Packet> packet)
       netxTxDelay = netxTxDelay + Seconds (ack_timeout);
     }
     postponeTransmission (netxTxDelay, packet);
+   /**
+    * In LBT mode, return here, as otherwise, method would continue and even-
+    * tually call DoSend (due to GetChannelForTx always returning a channel
+    * in LBT-mode).
+    */
+    if m_isCSMAactivated return;
   }
 
 
