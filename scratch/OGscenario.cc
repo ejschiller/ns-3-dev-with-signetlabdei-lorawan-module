@@ -32,16 +32,16 @@ int signaturePacketsPerTransaction = 2;
 int noOfOilfieldEndDevices = 30;
 int noOfOilFieldGateways = 9;
 
-int nDevices = noOfOilfieldEndDevices;
-const int nGateways = noOfOilFieldGateways;
+int noOfPipelineEndDevices = 21;
+int noOfPipelineGateways = 10;
+
+int nDevices = noOfOilfieldEndDevices + noOfPipelineEndDevices;
+const int nGateways = noOfOilFieldGateways + noOfPipelineGateways;
 
 int main (int argc, char *argv[])
 {
 
   CommandLine cmd;
-  cmd.AddValue ("nDevices",
-                "Number of end devices to include in the simulation",
-                nDevices);
   cmd.AddValue ("simulationTime",
                 "The time for which to simulate",
                 simulationTime);
@@ -85,7 +85,9 @@ int main (int argc, char *argv[])
   // Mobility//
   /////////////
 
-  // End Device mobility
+
+
+  // Oilfield mobility
 
   MobilityHelper mobilityOilFieldEd, mobilityOilFieldGw;
   Ptr<ListPositionAllocator> positionAllocOilfieldEd = CreateObject<ListPositionAllocator> ();
@@ -133,8 +135,6 @@ int main (int argc, char *argv[])
   mobilityOilFieldEd.SetPositionAllocator (positionAllocOilfieldEd);
   mobilityOilFieldEd.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
 
-  // Gateway mobility
-
   // x/y-coordinates of oilfield GWs
   std::vector<Vector> oilFieldGWpositions;
   oilFieldGWpositions.push_back(Vector (10000, 10000, 0.0));
@@ -157,6 +157,73 @@ int main (int argc, char *argv[])
 
   mobilityOilFieldGw.SetPositionAllocator (positionAllocOilfieldGw);
   mobilityOilFieldGw.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
+
+
+
+  // Pipeline mobility
+
+  MobilityHelper mobilityPipelineEd, mobilityPipelineGw;
+  Ptr<ListPositionAllocator> positionAllocPipelineEd = CreateObject<ListPositionAllocator> ();
+
+  // x/y-coordinates of pipeline EDs
+  std::vector<Vector> pipelineEDpositions;
+  pipelineEDpositions.push_back (Vector (20000.0, 10000, 0.0));
+  pipelineEDpositions.push_back (Vector (25000.0, 10000, 0.0));
+  pipelineEDpositions.push_back (Vector (30000.0, 10000, 0.0));
+  pipelineEDpositions.push_back (Vector (35000.0, 10000, 0.0));
+  pipelineEDpositions.push_back (Vector (40000.0, 10000, 0.0));
+  pipelineEDpositions.push_back (Vector (45000.0, 10000, 0.0));
+  pipelineEDpositions.push_back (Vector (50000.0, 10000, 0.0));
+  pipelineEDpositions.push_back (Vector (55000.0, 10000, 0.0));
+  pipelineEDpositions.push_back (Vector (60000.0, 10000, 0.0));
+  pipelineEDpositions.push_back (Vector (65000.0, 10000, 0.0));
+  pipelineEDpositions.push_back (Vector (70000.0, 10000, 0.0));
+  pipelineEDpositions.push_back (Vector (75000.0, 10000, 0.0));
+  pipelineEDpositions.push_back (Vector (80000.0, 10000, 0.0));
+  pipelineEDpositions.push_back (Vector (85000.0, 10000, 0.0));
+  pipelineEDpositions.push_back (Vector (90000.0, 10000, 0.0));
+  pipelineEDpositions.push_back (Vector (95000.0, 10000, 0.0));
+  pipelineEDpositions.push_back (Vector (100000.0, 10000, 0.0));
+  pipelineEDpositions.push_back (Vector (105000.0, 10000, 0.0));
+  pipelineEDpositions.push_back (Vector (110000.0, 10000, 0.0));
+  pipelineEDpositions.push_back (Vector (115000.0, 10000, 0.0));
+  pipelineEDpositions.push_back (Vector (120000.0, 10000, 0.0));
+
+  for (auto itePipelineEDpos = pipelineEDpositions.begin ();
+           itePipelineEDpos != pipelineEDpositions.end();
+           ++ itePipelineEDpos)
+  {
+    positionAllocPipelineEd->Add (*itePipelineEDpos);
+  }
+
+  mobilityPipelineEd.SetPositionAllocator (positionAllocPipelineEd);
+  mobilityPipelineEd.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
+
+
+  // x/y-coordinates of pipeline GWs
+  std::vector<Vector> pipelineGWpositions;
+  pipelineGWpositions.push_back (Vector (25000.0, 10100, 0.0));
+  pipelineGWpositions.push_back (Vector (35000.0, 9900, 0.0));
+  pipelineGWpositions.push_back (Vector (45000.0, 10100, 0.0));
+  pipelineGWpositions.push_back (Vector (55000.0, 9900, 0.0));
+  pipelineGWpositions.push_back (Vector (65000.0, 10100, 0.0));
+  pipelineGWpositions.push_back (Vector (75000.0, 9900, 0.0));
+  pipelineGWpositions.push_back (Vector (85000.0, 10100, 0.0));
+  pipelineGWpositions.push_back (Vector (95000.0, 9900, 0.0));
+  pipelineGWpositions.push_back (Vector (105000.0, 10100, 0.0));
+  pipelineGWpositions.push_back (Vector (115000.0, 9900, 0.0));
+
+  Ptr<ListPositionAllocator> positionAllocPipelineGw = CreateObject<ListPositionAllocator> ();
+
+  for (auto itePipelineGWpos = pipelineGWpositions.begin();
+      itePipelineGWpos != pipelineGWpositions.end(); ++itePipelineGWpos)
+  {
+    positionAllocPipelineGw->Add (*itePipelineGWpos);
+  }
+
+  mobilityPipelineGw.SetPositionAllocator (positionAllocPipelineGw);
+  mobilityPipelineGw.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
+
 
   /************************
    *  Create the channel  *
@@ -193,6 +260,10 @@ int main (int argc, char *argv[])
   NodeContainer oilfieldEndDevices;
   oilfieldEndDevices.Create (noOfOilfieldEndDevices);
 
+  // Create a set of pipeline nodes
+  NodeContainer pipelineEndDevices;
+  pipelineEndDevices.Create (noOfPipelineEndDevices);
+
   /*****************************************************
   *  Install applications on the oilfield end devices  *
   ******************************************************/
@@ -207,15 +278,32 @@ int main (int argc, char *argv[])
   oilfieldAppContainer.Start (Seconds (0));
   oilfieldAppContainer.Stop (simulationTime);
 
+  /*****************************************************
+  *  Install applications on the pipeline end devices  *
+  ******************************************************/
+
+  TransactionalSenderHelper pipelineAppHelper = TransactionalSenderHelper ();
+  pipelineAppHelper.SetDataPacketSize (dataPacketSize);
+  pipelineAppHelper.SetPartialSignaturePacketSize (partialSignaturePacketSize);
+  pipelineAppHelper.SetIntraTransactionDelay (Minutes (1.1));
+  pipelineAppHelper.SetInterTransactionDelay (Minutes (1.1));
+  pipelineAppHelper.SetPacketsPerTransaction (packetsPerTransaction);
+  ApplicationContainer pipelineAppContainer = pipelineAppHelper.Install (pipelineEndDevices);
+  pipelineAppContainer.Start (Seconds (0));
+  pipelineAppContainer.Stop (simulationTime);
+
   // Assign a mobility model to each oilfield node
   mobilityOilFieldEd.Install (oilfieldEndDevices);
+
+  // Assign a mobility model to each pipeline node
+  mobilityPipelineEd.Install (pipelineEndDevices);
 
   /*****************************************************
   *  Concatenation of all enddevice NodeContainers     *
   ******************************************************/
   NodeContainer endDevices;
-  // endDevices.Create (0);
   endDevices.Add (oilfieldEndDevices);
+  endDevices.Add (pipelineEndDevices);
 
   // Create the LoraNetDevices of the end devices
   uint8_t nwkId = 54;
@@ -250,15 +338,22 @@ int main (int argc, char *argv[])
   NodeContainer oilfieldGateways;
   oilfieldGateways.Create (noOfOilFieldGateways);
 
+  // Create a set of pipeline gateways
+  NodeContainer pipelineGateways;
+  pipelineGateways.Create (noOfPipelineGateways);
+
   // Assign a mobility model to each oilfield node
   mobilityOilFieldGw.Install (oilfieldGateways);
+
+  // Assign a mobility model to each pipeline node
+  mobilityPipelineGw.Install (pipelineGateways);
 
   /*****************************************************
   *  Concatenation of all gateway NodeContainers     *
   ******************************************************/
   NodeContainer gateways;
-  // gateways.Create (0);
   gateways.Add (oilfieldGateways);
+  gateways.Add (pipelineGateways);
 
   // Create a netdevice for each gateway
   phyHelper.SetDeviceType (LoraPhyHelper::GW);
