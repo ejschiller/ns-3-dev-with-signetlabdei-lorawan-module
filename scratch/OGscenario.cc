@@ -38,8 +38,13 @@ int noOfPipelineGateways = 10;
 int noOfShipEndDevices = 5;
 int noOfShipGateways = 1;
 
-int nDevices = noOfOilfieldEndDevices + noOfPipelineEndDevices + noOfShipEndDevices;
-const int nGateways = noOfOilFieldGateways + noOfPipelineGateways + noOfShipGateways;
+int noOfTankEndDevices = 3;
+int noOfTankGateways = 1;
+
+int nDevices = noOfOilfieldEndDevices + noOfPipelineEndDevices +
+                noOfShipEndDevices + noOfTankEndDevices;
+const int nGateways = noOfOilFieldGateways + noOfPipelineGateways +
+                        noOfShipGateways + noOfTankGateways;
 
 int main (int argc, char *argv[])
 {
@@ -270,6 +275,47 @@ int main (int argc, char *argv[])
   mobilityShipGw.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
 
 
+
+  // Tank mobility
+
+  MobilityHelper mobilityTankEd, mobilityTankGw;
+  Ptr<ListPositionAllocator> positionAllocTankEd = CreateObject<ListPositionAllocator> ();
+
+  // x/y-coordinates of tank EDs
+  std::vector<Vector> tankEDpositions;
+  tankEDpositions.push_back (Vector (39950, 99950, 0.0));
+  tankEDpositions.push_back (Vector (40050, 99950, 0.0));
+  tankEDpositions.push_back (Vector (40000, 100050, 0.0));
+
+
+  for (auto iteTankEDpos = tankEDpositions.begin ();
+           iteTankEDpos != tankEDpositions.end();
+           ++ iteTankEDpos)
+  {
+    positionAllocTankEd->Add (*iteTankEDpos);
+  }
+
+  mobilityTankEd.SetPositionAllocator (positionAllocTankEd);
+  mobilityTankEd.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
+
+
+  // x/y-coordinates of tank GWs
+  std::vector<Vector> tankGWpositions;
+  tankGWpositions.push_back (Vector (40000, 100000, 0.0));
+
+
+  Ptr<ListPositionAllocator> positionAllocTankGw = CreateObject<ListPositionAllocator> ();
+
+  for (auto iteTankGWpos = tankGWpositions.begin();
+      iteTankGWpos != tankGWpositions.end(); ++iteTankGWpos)
+  {
+    positionAllocTankGw->Add (*iteTankGWpos);
+  }
+
+  mobilityTankGw.SetPositionAllocator (positionAllocTankGw);
+  mobilityTankGw.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
+
+
   /************************
    *  Create the channel  *
    ************************/
@@ -313,6 +359,10 @@ int main (int argc, char *argv[])
   NodeContainer shipEndDevices;
   shipEndDevices.Create (noOfShipEndDevices);
 
+  // Create a set of tank nodes
+  NodeContainer tankEndDevices;
+  tankEndDevices.Create (noOfTankEndDevices);
+
   /*****************************************************
   *  Install applications on the oilfield end devices  *
   ******************************************************/
@@ -355,6 +405,20 @@ int main (int argc, char *argv[])
   shipAppContainer.Start (Seconds (0));
   shipAppContainer.Stop (simulationTime);
 
+  /*****************************************************
+  *  Install applications on the tank end devices  *
+  ******************************************************/
+
+  TransactionalSenderHelper tankAppHelper = TransactionalSenderHelper ();
+  tankAppHelper.SetDataPacketSize (dataPacketSize);
+  tankAppHelper.SetPartialSignaturePacketSize (partialSignaturePacketSize);
+  tankAppHelper.SetIntraTransactionDelay (Hours (0.25));
+  tankAppHelper.SetInterTransactionDelay (Hours (0.25));
+  tankAppHelper.SetPacketsPerTransaction (packetsPerTransaction);
+  ApplicationContainer tankAppContainer = tankAppHelper.Install (tankEndDevices);
+  tankAppContainer.Start (Seconds (0));
+  tankAppContainer.Stop (simulationTime);
+
   // Assign a mobility model to each oilfield node
   mobilityOilFieldEd.Install (oilfieldEndDevices);
 
@@ -364,6 +428,9 @@ int main (int argc, char *argv[])
   // Assign a mobility model to each ship node
   mobilityShipEd.Install (shipEndDevices);
 
+  // Assign a mobility model to each tank node
+  mobilityTankEd.Install (tankEndDevices);
+
   /*****************************************************
   *  Concatenation of all enddevice NodeContainers     *
   ******************************************************/
@@ -371,6 +438,7 @@ int main (int argc, char *argv[])
   endDevices.Add (oilfieldEndDevices);
   endDevices.Add (pipelineEndDevices);
   endDevices.Add (shipEndDevices);
+  endDevices.Add (tankEndDevices);
 
   // Create the LoraNetDevices of the end devices
   uint8_t nwkId = 54;
@@ -413,6 +481,10 @@ int main (int argc, char *argv[])
   NodeContainer shipGateways;
   shipGateways.Create (noOfShipGateways);
 
+  // Create a set of tank gateways
+  NodeContainer tankGateways;
+  tankGateways.Create (noOfTankGateways);
+
   // Assign a mobility model to each oilfield gateway
   mobilityOilFieldGw.Install (oilfieldGateways);
 
@@ -422,6 +494,9 @@ int main (int argc, char *argv[])
   // Assign a mobility model to each ship gateway
   mobilityShipGw.Install (shipGateways);
 
+  // Assign a mobility model to each tank gateway
+  mobilityTankGw.Install (tankGateways);
+
   /*****************************************************
   *  Concatenation of all gateway NodeContainers     *
   ******************************************************/
@@ -429,6 +504,7 @@ int main (int argc, char *argv[])
   gateways.Add (oilfieldGateways);
   gateways.Add (pipelineGateways);
   gateways.Add (shipGateways);
+  gateways.Add (tankGateways);
 
   // Create a netdevice for each gateway
   phyHelper.SetDeviceType (LoraPhyHelper::GW);
