@@ -210,16 +210,16 @@ int main (int argc, char *argv[])
 
   // x/y-coordinates of pipeline GWs
   std::vector<Vector> pipelineGWpositions;
-  pipelineGWpositions.push_back (Vector (25000.0, 10100, 0.0));
-  pipelineGWpositions.push_back (Vector (35000.0, 9900, 0.0));
-  pipelineGWpositions.push_back (Vector (45000.0, 10100, 0.0));
-  pipelineGWpositions.push_back (Vector (55000.0, 9900, 0.0));
-  pipelineGWpositions.push_back (Vector (65000.0, 10100, 0.0));
-  pipelineGWpositions.push_back (Vector (75000.0, 9900, 0.0));
-  pipelineGWpositions.push_back (Vector (85000.0, 10100, 0.0));
-  pipelineGWpositions.push_back (Vector (95000.0, 9900, 0.0));
-  pipelineGWpositions.push_back (Vector (105000.0, 10100, 0.0));
-  pipelineGWpositions.push_back (Vector (115000.0, 9900, 0.0));
+  pipelineGWpositions.push_back (Vector (25000.0, 10600, 0.0));
+  pipelineGWpositions.push_back (Vector (35000.0, 9400, 0.0));
+  pipelineGWpositions.push_back (Vector (45000.0, 10600, 0.0));
+  pipelineGWpositions.push_back (Vector (55000.0, 9400, 0.0));
+  pipelineGWpositions.push_back (Vector (65000.0, 10600, 0.0));
+  pipelineGWpositions.push_back (Vector (75000.0, 9400, 0.0));
+  pipelineGWpositions.push_back (Vector (85000.0, 10600, 0.0));
+  pipelineGWpositions.push_back (Vector (95000.0, 9400, 0.0));
+  pipelineGWpositions.push_back (Vector (105000.0, 10600, 0.0));
+  pipelineGWpositions.push_back (Vector (115000.0, 9400, 0.0));
 
   Ptr<ListPositionAllocator> positionAllocPipelineGw = CreateObject<ListPositionAllocator> ();
 
@@ -384,8 +384,8 @@ int main (int argc, char *argv[])
   TransactionalSenderHelper pipelineAppHelper = TransactionalSenderHelper ();
   pipelineAppHelper.SetDataPacketSize (dataPacketSize);
   pipelineAppHelper.SetPartialSignaturePacketSize (partialSignaturePacketSize);
-  pipelineAppHelper.SetIntraTransactionDelay (Minutes (1.2));
-  pipelineAppHelper.SetInterTransactionDelay (Minutes (1.2));
+  pipelineAppHelper.SetIntraTransactionDelay (Minutes (1.1));
+  pipelineAppHelper.SetInterTransactionDelay (Minutes (1.1));
   pipelineAppHelper.SetPacketsPerTransaction (packetsPerTransaction);
   ApplicationContainer pipelineAppContainer = pipelineAppHelper.Install (pipelineEndDevices);
   pipelineAppContainer.Start (Seconds (0));
@@ -398,8 +398,8 @@ int main (int argc, char *argv[])
   TransactionalSenderHelper shipAppHelper = TransactionalSenderHelper ();
   shipAppHelper.SetDataPacketSize (dataPacketSize);
   shipAppHelper.SetPartialSignaturePacketSize (partialSignaturePacketSize);
-  shipAppHelper.SetIntraTransactionDelay (Minutes (0.4));
-  shipAppHelper.SetInterTransactionDelay (Minutes (0.4));
+  shipAppHelper.SetIntraTransactionDelay (Minutes (2));
+  shipAppHelper.SetInterTransactionDelay (Minutes (2));
   shipAppHelper.SetPacketsPerTransaction (packetsPerTransaction);
   ApplicationContainer shipAppContainer = shipAppHelper.Install (shipEndDevices);
   shipAppContainer.Start (Seconds (0));
