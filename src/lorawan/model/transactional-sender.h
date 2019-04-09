@@ -86,6 +86,19 @@ public:
   void SendPacket (void);
 
   /**
+   * Repeat the last transaction's last packet transmission if it was rejected by
+   * EndDeviceLoraMac, such that no new transaction will be started afterwards.
+   * Only called by LeveragePacketCounter; Requires m_lastRound to be true.
+   */
+  void RepeatAbsoluteLastTransmission (void);
+
+  /**
+   * Set back packet- and transaction counter, if packet was refused by
+   * EndDeviceLoraMac (due to a (Re-)Tx still running).
+   */
+  void LeveragePacketCounter (Ptr<const Packet> packet);
+
+  /**
    * Start the application by scheduling the first SendPacket event
    */
   void StartApplication (void);

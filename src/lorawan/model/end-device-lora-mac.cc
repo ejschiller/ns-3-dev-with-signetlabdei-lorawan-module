@@ -152,6 +152,18 @@ EndDeviceLoraMac::Send (Ptr<Packet> packet)
       return;
     }
 
+  // If a (Re-)Tx is still running, new packets incoming from application are rejected
+  if ((m_nextTx.IsRunning ()
+        || m_retxParams.packet != 0)
+        && (packet != m_retxParams.packet))
+  {
+    NS_LOG_DEBUG ("Incoming new packet from application is rejected, as"
+                  << " there is still an ongoing transmission.");
+    m_rejectedNewPacketStillOneRunning (packet);
+
+    return;
+  }
+
   // If it is not possible to transmit now because of the duty cycle,
   // or because we are receiving, schedule a tx/retx later
   Time netxTxDelay = GetNextTransmissionDelay ();
@@ -870,7 +882,10 @@ EndDeviceLoraMac::CloseSecondReceiveWindow (void)
                    " transmissions left. We were not transmitting confirmed messages.");
 
       // Reset retransmission parameters
-      resetRetransmissionParameters ();
+      if (m_mType == LoraMacHeader::CONFIRMED_DATA_UP)
+      {
+        resetRetransmissionParameters ();
+      }
     }
 }
 

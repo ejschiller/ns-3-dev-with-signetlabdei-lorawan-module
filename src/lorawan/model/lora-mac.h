@@ -236,6 +236,11 @@ protected:
   TracedCallback<Ptr<Packet const> > m_sentNewPacket;
 
   /**
+   * Trace source that is fired when a new APP layer packet arrives at the MAC
+   * layer but is rejected, as there is still a (re-)transmission running
+   */
+  TracedCallback<Ptr<Packet const> > m_rejectedNewPacketStillOneRunning;
+  /**
    * The PHY instance that sits under this MAC layer.
    */
   Ptr<LoraPhy> m_phy;

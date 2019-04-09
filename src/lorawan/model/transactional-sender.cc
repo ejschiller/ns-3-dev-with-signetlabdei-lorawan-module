@@ -206,11 +206,11 @@ TransactionalSender::SendPacket (void)
   NS_ASSERT(packetSize <= sigPartPktSize && packetSize <= dataPktSize);
 
   if (packet_count == packetsPerTransaction) {
+    ++packet_count;
     // Filling the packet payload up with zeroes until the specified size.
     packet->AddPaddingAtEnd (sigPartPktSize - packetSize);
     m_mac->Send (packet);
     NS_LOG_DEBUG ("Sent signature packet 1/2 of size " << packet->GetSize () << " B");
-    ++packet_count;
 
     m_sendEvent = Simulator::Schedule (intraTransactionDelay, &TransactionalSender::SendPacket,
                                      this);
@@ -234,14 +234,63 @@ TransactionalSender::SendPacket (void)
 
   } else {
     // Filling the packet payload up with zeroes until the specified size.
+    ++packet_count;
     packet->AddPaddingAtEnd (dataPktSize - packetSize);
     m_mac->Send (packet);
-    NS_LOG_DEBUG ("Sent a data packet of size " << packet->GetSize () << " B, packet count: " << packet_count);
-    ++packet_count;
+    NS_LOG_DEBUG ("Sent a data packet of size " << packet->GetSize () << " B, packet count: " << packet_count - 1);
     m_sendEvent = Simulator::Schedule (intraTransactionDelay, &TransactionalSender::SendPacket,
                                        this);
   }
 
+}
+
+void
+TransactionalSender::RepeatAbsoluteLastTransmission (void)
+{
+  NS_ASSERT (m_lastRound);
+  NS_ASSERT (packet_count == packetsPerTransaction + 1);
+  Ptr<Packet> packet;
+  // Preparing the Header to be put into the packet's payload
+  TransactionalPacketHeader transactionalHeader;
+  transactionalHeader.SetNodeUid(nodeUID);
+  transactionalHeader.SetTransactionId(transaction_count);
+  transactionalHeader.SetPacketId(packet_count);
+
+  packet = Create<Packet> ();
+  packet->AddHeader (transactionalHeader);
+
+  // Getting the packet's current size in B
+  uint32_t packetSize = packet->GetSize ();
+
+  // Filling the packet payload up with zeroes until the specified size.
+  packet->AddPaddingAtEnd (sigPartPktSize - packetSize);
+  m_mac->Send (packet);
+  NS_LOG_DEBUG ("Sent signature packet 2/2 of size " << packet->GetSize () << " B");
+}
+
+void
+TransactionalSender::LeveragePacketCounter (Ptr<const Packet> packet)
+{
+  Ptr<Packet> packetCopy = packet->Copy ();
+  TransactionalPacketHeader transactionalHdr;
+  packetCopy->RemoveHeader (transactionalHdr);
+
+  int nodeUidTmp = (int) transactionalHdr.GetNodeUid ();
+  int transactionIdTmp = (int) transactionalHdr.GetTransactionId ();
+  int packetIdTmp = (int) transactionalHdr.GetPacketId ();
+
+  NS_ASSERT ((int) nodeUID == nodeUidTmp);
+
+  // Counters are reset to the ones inside the rejected packet's payload
+  packet_count = packetIdTmp;
+  transaction_count = transactionIdTmp;
+
+  // In case the absolute last packet was rejected, call RepeatAbsoluteLastTransmission
+  if (m_lastRound && packetIdTmp == (packetsPerTransaction + 1))
+  {
+    m_sendEvent = Simulator::Schedule (intraTransactionDelay,
+                    &TransactionalSender::RepeatAbsoluteLastTransmission, this);
+  }
 }
 
 void
@@ -259,6 +308,10 @@ TransactionalSender::StartApplication (void)
       NS_ASSERT (m_mac != 0);
     }
 
+  m_mac->TraceConnectWithoutContext ("PacketRejectedDueStillOngoingTX",
+                                      MakeCallback
+                                      (&TransactionalSender::LeveragePacketCounter,
+                                      this));
   // Schedule the next SendPacket event
   Simulator::Cancel (m_sendEvent);
   NS_LOG_DEBUG ("Starting up application with a first event with a " <<

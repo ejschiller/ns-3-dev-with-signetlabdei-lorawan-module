@@ -48,6 +48,10 @@ LoraMac::GetTypeId (void)
                      "Trace source indicating a packet "
                      "could not be sent immediately because of duty cycle limitations",
                      MakeTraceSourceAccessor (&LoraMac::m_cannotSendBecauseDutyCycle),
+                     "ns3::Packet::TracedCallback")
+    .AddTraceSource ("PacketRejectedDueStillOngoingTX",
+                     "Trace source indicating new incoming packet rejected as a Tx still running",
+                     MakeTraceSourceAccessor (&LoraMac::m_rejectedNewPacketStillOneRunning),
                      "ns3::Packet::TracedCallback");
   return tid;
 }
