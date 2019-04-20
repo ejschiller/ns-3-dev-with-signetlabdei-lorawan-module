@@ -305,7 +305,6 @@ void
 NetworkServer::RegisterPacketReception (Ptr<const Packet> packet, unsigned int index)
 {
   ++m_receivedPackets;
-  //NS_LOG_UNCOND("Successfully received a packet. Packet count = " << m_receivedPackets);
 }
 
 void
@@ -320,7 +319,6 @@ NetworkServer::RegisterPacketLossInterference (Ptr<const Packet> packet, unsigne
   else RegisterUnsuccessfulTransmission (myPacket);
 
   ++m_packetLossInterference;
-  //NS_LOG_UNCOND("Lost a packet due to interference. Interference packet loss count = " << m_packetLossInterference);
 }
 
 void
@@ -335,7 +333,6 @@ NetworkServer::RegisterPacketLossUnderSensitivity (Ptr<const Packet> packet, uns
   else RegisterUnsuccessfulTransmission (myPacket);
 
   ++m_packetLossUnderSensitivity;
-  //NS_LOG_UNCOND("Lost a packet due to reception under sensitivity. Under sensitivity packet loss count = " << m_packetLossUnderSensitivity);
 }
 
 void
@@ -350,7 +347,6 @@ NetworkServer::RegisterPacketLossNoMoreReceivers (Ptr<const Packet> packet, unsi
   else RegisterUnsuccessfulTransmission (myPacket);
 
   ++m_packetLossNoMoreReceivers;
-  //NS_LOG_UNCOND("Lost a packet because no more receivers were available. No more receivers packet loss count = " << m_packetLossNoMoreReceivers);
 }
 
 void
@@ -365,7 +361,6 @@ NetworkServer::RegisterPacketLossBecauseTransmitting (Ptr<const Packet> packet, 
   else RegisterUnsuccessfulTransmission (myPacket);
 
   ++m_packetLossBecauseTransmitting;
-  //NS_LOG_UNCOND("Lost a packet because GW was transmitting during packet arrival. GW Tx packet loss count = " << m_packetLossBecauseTransmitting);
 }
 
 void
@@ -376,7 +371,6 @@ NetworkServer::RegisterRequiredTransmissions (unsigned char ch_attempts, bool fl
   if (attempts > 0)
   {
     m_requiredTransmissions[attempts-1] = m_requiredTransmissions[attempts-1] + 1;
-    //NS_LOG_UNCOND ("Total number of transmissions required to deliver this packet: " << (int) attempts);
   }
 }
 

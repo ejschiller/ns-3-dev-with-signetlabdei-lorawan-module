@@ -1,7 +1,8 @@
 /*
- * This script simulates a Lora network with device positions based on extracted
- * geographical positions of real devices in the Zurich area.
- * Scenario #2: Periodical transmission of ACKnowledged packets.
+ * This script simulates a LoRa network using geographical device positions
+ * of regularly transmitting TTN devices in the Zurich area using six gateways.
+ *
+ * Scenario #2: Transmission of confirmed packets.
  */
 
 #include "ns3/end-device-lora-phy.h"
@@ -31,7 +32,7 @@ NS_LOG_COMPONENT_DEFINE ("Scenario2");
 int nDevices = 50;
 const int nGateways = 6;
 Time simulationTime = Hours (0.5);
-Time interTransmissionDelay = Seconds (60);
+Time interTransmissionDelay = Seconds (120);
 int packetSize = 42;
 
 int main (int argc, char *argv[])
