@@ -1,7 +1,8 @@
 /*
- * This script simulates a Lora network with device positions based on extracted
- * geographical positions of real devices in the Zurich area.
- * Scenario #3: Transactional transmission of non-acknowledged packets.
+ * This script simulates a LoRa network using geographical device positions
+ * of regularly transmitting TTN devices in the Zurich area using six gateways.
+ *
+ * Scenario #3: Transmission of signed, unconfirmed multi-packet transactions.
  */
 
  #include "ns3/end-device-lora-phy.h"
@@ -34,7 +35,7 @@
  Time simulationTime = Hours (0.5);
  int dataPacketSize = 42;
  int partialSignaturePacketSize = 34;
- Time intraTransactionDelay = Seconds (10);
+ Time intraTransactionDelay = Seconds (120);
  Time interTransactionDelay = intraTransactionDelay;
  int packetsPerTransaction = 10;
  int signaturePacketsPerTransaction = 2;
