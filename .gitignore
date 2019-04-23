@@ -42,5 +42,9 @@ buildings.txt
 performance
 
 scenario*.csv
+energy.csv
 
 logs/
+
+battery-level.txt
+battLevels.csv

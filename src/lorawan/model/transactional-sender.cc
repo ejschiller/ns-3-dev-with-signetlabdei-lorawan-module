@@ -206,16 +206,6 @@ TransactionalSender::SendPacket (void)
   NS_ASSERT(packetSize <= sigPartPktSize && packetSize <= dataPktSize);
 
   if (packet_count == packetsPerTransaction) {
-    ++packet_count;
-    // Filling the packet payload up with zeroes until the specified size.
-    packet->AddPaddingAtEnd (sigPartPktSize - packetSize);
-    m_mac->Send (packet);
-    NS_LOG_DEBUG ("Sent signature packet 1/2 of size " << packet->GetSize () << " B");
-
-    m_sendEvent = Simulator::Schedule (intraTransactionDelay, &TransactionalSender::SendPacket,
-                                     this);
-
-  } else if (packet_count == packetsPerTransaction + 1) {
     // resetting the counter (for the upcoming transaction)
     SetPacketCount(0);
     // incrementing the transaction number (id, counter)
@@ -223,7 +213,7 @@ TransactionalSender::SendPacket (void)
     // Filling the packet payload up with zeroes until the specified size.
     packet->AddPaddingAtEnd (sigPartPktSize - packetSize);
     m_mac->Send (packet);
-    NS_LOG_DEBUG ("Sent signature packet 2/2 of size " << packet->GetSize () << " B");
+    NS_LOG_DEBUG ("Sent signature packet size " << packet->GetSize () << " B");
     // Checking if the simulation is not yet about to be stopped
     if (!m_lastRound)
     {
@@ -248,7 +238,7 @@ void
 TransactionalSender::RepeatAbsoluteLastTransmission (void)
 {
   NS_ASSERT (m_lastRound);
-  NS_ASSERT (packet_count == packetsPerTransaction + 1);
+  NS_ASSERT (packet_count == packetsPerTransaction);
   Ptr<Packet> packet;
   // Preparing the Header to be put into the packet's payload
   TransactionalPacketHeader transactionalHeader;
@@ -265,7 +255,7 @@ TransactionalSender::RepeatAbsoluteLastTransmission (void)
   // Filling the packet payload up with zeroes until the specified size.
   packet->AddPaddingAtEnd (sigPartPktSize - packetSize);
   m_mac->Send (packet);
-  NS_LOG_DEBUG ("Sent signature packet 2/2 of size " << packet->GetSize () << " B");
+  NS_LOG_DEBUG ("Sent last signature packet size " << packet->GetSize () << " B");
 }
 
 void
@@ -286,7 +276,7 @@ TransactionalSender::LeveragePacketCounter (Ptr<const Packet> packet)
   transaction_count = transactionIdTmp;
 
   // In case the absolute last packet was rejected, call RepeatAbsoluteLastTransmission
-  if (m_lastRound && packetIdTmp == (packetsPerTransaction + 1))
+  if (m_lastRound && packetIdTmp == (packetsPerTransaction))
   {
     m_sendEvent = Simulator::Schedule (intraTransactionDelay,
                     &TransactionalSender::RepeatAbsoluteLastTransmission, this);
