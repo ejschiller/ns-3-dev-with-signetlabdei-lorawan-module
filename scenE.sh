@@ -1,7 +1,7 @@
 #!/bin/bash
-nEndDevices='3'
-delays='20'
-dPktsPerTrans='10 5 1'
+nEndDevices='3 5'
+delays='120 95'
+dPktsPerTrans='12 8'
 
 touch battLevels.csv
 
